@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import rimraf from 'rimraf';
 
 const {
   author,
@@ -40,3 +41,5 @@ fs.copyFileSync(
   path.resolve(__dirname, '../README.md'),
   path.resolve(__dirname, '../dist/README.md'),
 );
+
+rimraf.sync(path.resolve(__dirname, '../dist/__tests__'));
