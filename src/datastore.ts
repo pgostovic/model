@@ -10,23 +10,26 @@ export interface IDataStore {
 
 const dataStoresByModel = new Map<any, IDataStore>();
 
-export const datastore = (ds: IDataStore) => (modelClass: any) => {
+export const datastore = (ds: IDataStore, collectionName?: string) => (
+  modelClass: any,
+) => {
+  modelClass.collectionName = collectionName || modelClass.name;
   dataStoresByModel.set(modelClass, ds);
 };
 
 const getDataStore = (modelClass: any): IDataStore => {
   const ds = dataStoresByModel.get(modelClass);
   if (!ds) {
-    throw new Error(`No datastore set for ${modelClass.name}`);
+    throw new Error(`No datastore set for ${modelClass.collectionName}`);
   }
   return ds;
 };
 
 export const saveData = (modelClass: any, data: IData) =>
-  getDataStore(modelClass).save(modelClass.name, data);
+  getDataStore(modelClass).save(modelClass.collectionName, data);
 
 export const findData = (modelClass: any, id: string) =>
-  getDataStore(modelClass).find(modelClass.name, id);
+  getDataStore(modelClass).find(modelClass.collectionName, id);
 
 export const searchData = (modelClass: any, query: IQuery) =>
-  getDataStore(modelClass).search(modelClass.name, query);
+  getDataStore(modelClass).search(modelClass.collectionName, query);

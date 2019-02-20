@@ -8,7 +8,7 @@ interface IUserData extends IData {
   lastName?: string;
 }
 
-@datastore(memoryDataStore)
+@datastore(memoryDataStore, 'users')
 class User extends Model<IUserData, User> {
   @field public email?: string;
   @field public firstName?: string;

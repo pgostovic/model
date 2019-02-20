@@ -1,7 +1,5 @@
 /* tslint:disable max-classes-per-file */
 
-import { datastore } from '../datastore';
-import memoryDataStore from '../datastores/memoryDataStore';
 import Model, { field, IData, mutable } from '../model';
 
 interface IUserData extends IData {
@@ -10,7 +8,6 @@ interface IUserData extends IData {
   lastName?: string;
 }
 
-@datastore(memoryDataStore)
 class User extends Model<IUserData> {
   @field public email?: string;
   @field public firstName?: string;

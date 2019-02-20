@@ -1,3 +1,4 @@
+import md5 from 'md5';
 import { findData, IQuery, saveData, searchData } from './datastore';
 
 export type IValue = string | number | boolean | undefined;
@@ -22,9 +23,13 @@ export const field = ((): any => (
   fieldNames.push(fieldName);
 })();
 
-export const mutable = ((): any => (modelClass: Model) => {
+export const mutable = ((): any => (modelClass: new () => Model) => {
   isMutableByModel.set(modelClass, true);
 })();
+
+export const classId = (cid: string): any => (modelClass: any) => {
+  modelClass.cid = cid;
+};
 
 abstract class Model<T extends IData = IData, C = any> {
   @field public id?: string;
@@ -58,6 +63,15 @@ abstract class Model<T extends IData = IData, C = any> {
       return (this as any) as C;
     }
     return new (this.constructor as any)({ ...this.getData(), id });
+  }
+
+  public toJS(): IData {
+    const cid = (this.constructor as any).cid || this.hash();
+    return { ...this.getData(), _cid_: cid };
+  }
+
+  private hash(): string {
+    return md5([...this.getFieldNames()].sort().join(' '));
   }
 
   private isMutable(): boolean {
