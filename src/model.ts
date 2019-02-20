@@ -9,6 +9,22 @@ export interface IData {
 
 const isMutableByModel = new Map<any, boolean>();
 const fieldNamesByModel = new Map<any, string[]>();
+const modelClassesById = new Map<string, any>();
+
+export const fromJS = <T extends Model<IData>>(js: IData): T => {
+  const cid = js._cid_ as string;
+  const modelClass = modelClassesById.get(cid);
+  if (modelClass) {
+    const data: IData = {};
+    Object.keys(js)
+      .filter(k => k !== '_cid_')
+      .forEach(k => {
+        data[k] = js[k];
+      });
+    return new modelClass(data);
+  }
+  throw new Error(`No model class registered for id: ${cid}`);
+};
 
 export const field = ((): any => (
   model: Model<IData>,
@@ -31,11 +47,25 @@ export const classId = (cid: string): any => (modelClass: any) => {
   modelClass.cid = cid;
 };
 
+const getFieldNames = (modelClass: any): string[] => {
+  return (fieldNamesByModel.get(modelClass) || []).concat(
+    fieldNamesByModel.get(Model) || [],
+  );
+};
+
+const getClassId = (modelClass: any): string => {
+  return modelClass.cid || md5([...getFieldNames(modelClass)].sort().join(' '));
+};
+
 abstract class Model<T extends IData = IData, C = any> {
+  public static register() {
+    modelClassesById.set(getClassId(this), this);
+  }
+
   @field public id?: string;
 
   constructor(data: T) {
-    const fieldNames = this.getFieldNames();
+    const fieldNames = getFieldNames(this.constructor);
 
     const unsupportedKeys = Object.keys(data).filter(
       k => !fieldNames.includes(k),
@@ -66,27 +96,16 @@ abstract class Model<T extends IData = IData, C = any> {
   }
 
   public toJS(): IData {
-    const cid = (this.constructor as any).cid || this.hash();
-    return { ...this.getData(), _cid_: cid };
-  }
-
-  private hash(): string {
-    return md5([...this.getFieldNames()].sort().join(' '));
+    return { ...this.getData(), _cid_: getClassId(this.constructor) };
   }
 
   private isMutable(): boolean {
     return isMutableByModel.get(this.constructor) || false;
   }
 
-  private getFieldNames(): string[] {
-    return (fieldNamesByModel.get(this.constructor) || []).concat(
-      fieldNamesByModel.get(Model) || [],
-    );
-  }
-
   private getData(): IData {
     const data: IData = {};
-    this.getFieldNames().forEach((key: string) => {
+    getFieldNames(this.constructor).forEach((key: string) => {
       const propDesc = Object.getOwnPropertyDescriptor(this, key);
       data[key] = (propDesc || {}).value;
     });
