@@ -4,7 +4,10 @@
   "jsRules": {},
   "rules": {
     "quotemark": [true, "single", "avoid-escape"],
-    "trailing-comma": [true, { "multiline": "always", "singleline": "never" }]
+    "trailing-comma": [true, { "multiline": "always", "singleline": "never" }],
+    "object-literal-sort-keys": {
+      "options": "match-declaration-order"
+    }
   },
   "rulesDirectory": []
 }

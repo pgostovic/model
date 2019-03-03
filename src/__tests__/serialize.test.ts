@@ -30,16 +30,16 @@ test('serialize/deserialize', () => {
     lastName: 'Gump',
     locations: [
       {
-        city: 'Toronto',
         name: 'home',
-        province: 'Ontario',
         street: '123 Orchard Ave.',
+        city: 'Toronto',
+        province: 'Ontario',
       },
       {
-        city: 'Toronto',
         name: 'work',
-        province: 'Ontario',
         street: '555 Main St.',
+        city: 'Toronto',
+        province: 'Ontario',
       },
     ],
   });
