@@ -1,10 +1,10 @@
 import md5 from 'md5';
 import { findData, IQuery, saveData, searchData } from './datastore';
 
-export type IValue = string | number | boolean | undefined;
+export type IValue = string | number | boolean | IData | undefined;
 
 export interface IData {
-  [key: string]: IValue;
+  [key: string]: IValue | IValue[];
 }
 
 const isMutableByModel = new Map<any, boolean>();
@@ -96,7 +96,10 @@ abstract class Model<T extends IData = IData, C = any> {
   }
 
   public toJS(): IData {
-    return { ...this.getData(), _cid_: getClassId(this.constructor) };
+    return {
+      ...JSON.parse(JSON.stringify(this.getData())),
+      _cid_: getClassId(this.constructor),
+    };
   }
 
   private isMutable(): boolean {

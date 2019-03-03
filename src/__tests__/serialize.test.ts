@@ -4,12 +4,21 @@ interface IUserData extends IData {
   email?: string;
   firstName?: string;
   lastName?: string;
+  locations: ILocation[];
+}
+
+interface ILocation extends IData {
+  name: string;
+  street: string;
+  city: string;
+  province: string;
 }
 
 class User extends Model<IUserData> {
   @field public email?: string;
   @field public firstName?: string;
   @field public lastName?: string;
+  @field public locations?: ILocation[];
 }
 
 User.register();
@@ -19,13 +28,28 @@ test('serialize/deserialize', () => {
     email: 'bubba@gump.com',
     firstName: 'Bubba',
     lastName: 'Gump',
+    locations: [
+      {
+        city: 'Toronto',
+        name: 'home',
+        province: 'Ontario',
+        street: '123 Orchard Ave.',
+      },
+      {
+        city: 'Toronto',
+        name: 'work',
+        province: 'Ontario',
+        street: '555 Main St.',
+      },
+    ],
   });
 
   const userJS = user.toJS();
   const userFromJS = fromJS(userJS) as User;
 
   expect(userFromJS).toBeInstanceOf(User);
-  expect(userFromJS.email).toBe(user.email);
-  expect(userFromJS.firstName).toBe(user.firstName);
-  expect(userFromJS.lastName).toBe(user.lastName);
+  expect(userFromJS).not.toBe(user);
+  expect(userFromJS).toEqual(user);
+  expect(userFromJS.locations).not.toBe(user.locations);
+  expect(userFromJS.locations).toEqual(user.locations);
 });
