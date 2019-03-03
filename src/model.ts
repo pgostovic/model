@@ -57,7 +57,7 @@ const getClassId = (modelClass: any): string => {
   return modelClass.cid || md5([...getFieldNames(modelClass)].sort().join(' '));
 };
 
-abstract class Model<T extends IData = IData, C = any> {
+export abstract class Model<T extends IData = IData, C = any> {
   public static register() {
     modelClassesById.set(getClassId(this), this);
   }
@@ -116,7 +116,7 @@ abstract class Model<T extends IData = IData, C = any> {
   }
 }
 
-export default Model;
+// export default Model;
 
 export const find = async <T extends Model<IData>>(
   c: new (...args: any[]) => T,
