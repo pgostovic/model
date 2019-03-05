@@ -17,7 +17,7 @@ const dataId = (function* messageIdGen() {
   }
 })();
 
-const memoryDataStore = {
+export const memoryDataStore = {
   save: async (modelName: string, data: IData): Promise<string> => {
     const id = (data.id as string) || dataId.next().value;
     const records = getCollection(modelName).filter(record => record.id !== id);
@@ -36,5 +36,3 @@ const memoryDataStore = {
       record => !Object.keys(query).find(k => record[k] !== query[k]),
     ),
 };
-
-export default memoryDataStore;

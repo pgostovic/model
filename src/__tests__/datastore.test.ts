@@ -1,5 +1,12 @@
-import { datastore, field, find, IData, Model, search } from '..';
-import memoryDataStore from '../datastores/memoryDataStore';
+import {
+  datastore,
+  field,
+  find,
+  IData,
+  memoryDataStore,
+  Model,
+  search,
+} from '../index.server';
 
 interface IUserData extends IData {
   email?: string;

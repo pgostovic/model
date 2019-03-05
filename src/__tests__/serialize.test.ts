@@ -1,4 +1,4 @@
-import { field, fromJS, IData, Model } from '..';
+import { field, fromJS, IData, Model } from '../index.server';
 
 interface IUserData extends IData {
   email?: string;

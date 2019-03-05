@@ -1,8 +1,9 @@
 {
   "name": "@phnq/model",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Data access.",
-  "main": "index.js",
+  "main": "index.server.js",
+  "browser": "index.client.js",
   "scripts": {
     "dist": "tsc",
     "postdist": "ts-node scripts/postdist",
