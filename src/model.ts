@@ -116,15 +116,15 @@ export abstract class Model<T = IData, C = any> {
   }
 }
 
-// export default Model;
-
 export const find = async <T extends Model<IData>>(
   c: new (...args: any[]) => T,
-  id: string,
+  id?: string,
 ): Promise<T | undefined> => {
-  const data = await findData(c, id);
-  if (data) {
-    return new c(data);
+  if (id) {
+    const data = await findData(c, id);
+    if (data) {
+      return new c(data);
+    }
   }
   return undefined;
 };
