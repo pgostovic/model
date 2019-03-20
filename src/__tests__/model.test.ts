@@ -1,8 +1,8 @@
 /* tslint:disable max-classes-per-file */
 
-import { field, IData, Model, mutable } from '../index.server';
+import { field, Model, mutable } from '../index.server';
 
-interface IUserData extends IData {
+interface IUserData {
   email?: string;
   firstName?: string;
   lastName?: string;

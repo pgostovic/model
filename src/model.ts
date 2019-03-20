@@ -57,14 +57,14 @@ const getClassId = (modelClass: any): string => {
   return modelClass.cid || md5([...getFieldNames(modelClass)].sort().join(' '));
 };
 
-export abstract class Model<T extends IData = IData, C = any> {
+export abstract class Model<T = IData, C = any> {
   public static register() {
     modelClassesById.set(getClassId(this), this);
   }
 
   @field public id?: string;
 
-  constructor(data: T) {
+  constructor(data: T & IData) {
     const fieldNames = getFieldNames(this.constructor);
 
     const unsupportedKeys = Object.keys(data).filter(
