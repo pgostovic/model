@@ -1,5 +1,8 @@
+import { createLogger } from '@phnq/log';
 import { IQuery } from '../datastore';
 import { IData, IValue } from '../model';
+
+const log = createLogger('memoryDataStore');
 
 export interface IMemoryDataStoreQuery extends IQuery {
   [key: string]: IValue;
@@ -21,7 +24,8 @@ export const memoryDataStore = {
   save: async (modelName: string, data: IData): Promise<string> => {
     const id = (data.id as string) || dataId.next().value;
     const records = getCollection(modelName).filter(record => record.id !== id);
-    collections.set(modelName, [...records, { ...data, id }]);
+    const newRecord = { ...data, id };
+    collections.set(modelName, [...records, newRecord]);
     return id;
   },
 
@@ -35,4 +39,8 @@ export const memoryDataStore = {
     getCollection(modelName).filter(
       record => !Object.keys(query).find(k => record[k] !== query[k]),
     ),
+};
+
+export const logCollections = () => {
+  log('COLLECTIONS: ', collections);
 };

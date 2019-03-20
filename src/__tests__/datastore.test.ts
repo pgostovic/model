@@ -84,3 +84,32 @@ test('search for model instances', async () => {
   expect(emails.has('tom@test.com')).toBe(true);
   expect(emails.has('bill@test.com')).toBe(false);
 });
+
+test('search by multiple fields', async () => {
+  const jed = new User({
+    email: 'jed@test.com',
+    firstName: 'Jed',
+    lastName: 'Smith',
+  });
+  await jed.save();
+
+  const paddy = new User({
+    email: 'paddy@test.com',
+    firstName: 'Paddy',
+    lastName: 'Smith',
+  });
+  await paddy.save();
+
+  const larry = new User({
+    email: 'larry@test.com',
+    firstName: 'Larry',
+    lastName: 'Jones',
+  });
+  await larry.save();
+
+  const jedSmiths = await search(User, {
+    firstName: 'Jed',
+    lastName: 'Smith',
+  });
+  expect(jedSmiths.length).toBe(1);
+});
