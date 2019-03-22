@@ -21,6 +21,28 @@ class MutableUser extends Model<IUserData> {
   @field public lastName?: string;
 }
 
+interface IWithDefaultData {
+  num?: number;
+  isStuff?: boolean;
+}
+
+class WithDefault extends Model<IWithDefaultData> {
+  @field public num?: number;
+  @field public isStuff?: boolean;
+
+  constructor(data: IWithDefaultData) {
+    super({ isStuff: false, ...data });
+  }
+}
+
+interface IWithDateData {
+  date?: Date;
+}
+
+class WithDate extends Model<IWithDateData> {
+  @field public date?: Date;
+}
+
 test('new model instance', () => {
   const user = new User({
     email: 'user@test.com',
@@ -99,4 +121,33 @@ test('copy model instance, change field', () => {
   expect(userCopy.email).toBe('user2@test.com');
   expect(userCopy.firstName).toBe('Bubba');
   expect(userCopy.lastName).toBe('Gump');
+});
+
+test('default field value', () => {
+  const w = new WithDefault({
+    num: 42,
+  });
+
+  expect(w.num).toBe(42);
+  expect(w.isStuff).toBe(false);
+});
+
+test('default field value overridden', () => {
+  const w = new WithDefault({
+    num: 42,
+    isStuff: true,
+  });
+
+  expect(w.num).toBe(42);
+  expect(w.isStuff).toBe(true);
+});
+
+test('with date field', () => {
+  const date = new Date();
+
+  const w = new WithDate({
+    date,
+  });
+
+  expect(w.date).toBe(date);
 });

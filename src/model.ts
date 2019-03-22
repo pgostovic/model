@@ -1,7 +1,7 @@
 import md5 from 'md5';
 import { findData, IQuery, saveData, searchData } from './datastore';
 
-export type IValue = string | number | boolean | IData | undefined;
+export type IValue = string | number | boolean | Date | IData | undefined;
 
 export interface IData {
   [key: string]: IValue | IValue[];
