@@ -12,6 +12,9 @@ interface IUserData extends IData {
   email?: string;
   firstName?: string;
   lastName?: string;
+  stuff?: {
+    foo: number;
+  };
 }
 
 @datastore(memoryDataStore, 'users')
@@ -19,6 +22,7 @@ class User extends Model<IUserData, User> {
   @field public email?: string;
   @field public firstName?: string;
   @field public lastName?: string;
+  @field public stuff?: { foo: number };
 }
 
 test('save model instance', async () => {
@@ -112,4 +116,26 @@ test('search by multiple fields', async () => {
     lastName: 'Smith',
   });
   expect(jedSmiths.length).toBe(1);
+});
+
+test('deep search', async () => {
+  const bubba = new User({
+    email: 'bubba@cheese.com',
+    firstName: 'Bubba',
+    lastName: 'Cheese',
+    stuff: {
+      foo: 42,
+    },
+  });
+  await bubba.save();
+
+  const bubba42s = await search(User, {
+    stuff: { foo: 42 },
+  });
+  expect(bubba42s.length).toBe(1);
+
+  const bubba43s = await search(User, {
+    stuff: { foo: 43 },
+  });
+  expect(bubba43s.length).toBe(0);
 });

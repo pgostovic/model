@@ -4,9 +4,7 @@ import { IData, IValue } from '../model';
 
 const log = createLogger('memoryDataStore');
 
-export interface IMemoryDataStoreQuery extends IQuery {
-  [key: string]: IValue;
-}
+export type IMemoryDataStoreQuery = IQuery & IData;
 
 const collections = new Map<string, IData[]>();
 
@@ -40,8 +38,8 @@ export const memoryDataStore = {
     modelName: string,
     query: IMemoryDataStoreQuery,
   ): Promise<IData[]> => {
-    const records = getCollection(modelName).filter(
-      record => !Object.keys(query).find(k => record[k] !== query[k]),
+    const records = getCollection(modelName).filter(record =>
+      deepMatch(query, record),
     );
     log(
       `SEARCH - ${modelName}(${JSON.stringify(query)}) ${
@@ -50,6 +48,17 @@ export const memoryDataStore = {
     );
     return records;
   },
+};
+
+const deepMatch = (query: IValue, data: IValue): boolean => {
+  if (query instanceof Array && data instanceof Array) {
+    return !query.find((item, i) => !deepMatch(item, data[i]));
+  } else if (typeof query === 'object' && typeof data === 'object') {
+    return !Object.keys(query).find(
+      k => !deepMatch((query as any)[k], (data as any)[k]),
+    );
+  }
+  return query === data;
 };
 
 export const logCollections = () => {
