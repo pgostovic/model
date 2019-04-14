@@ -1,5 +1,5 @@
 import { createLogger } from '@phnq/log';
-import { IQuery } from '../datastore';
+import { IDataStore, IQuery } from '../datastore';
 import { IData, IValue } from '../model';
 
 const log = createLogger('memoryDataStore');
@@ -18,7 +18,7 @@ const dataId = (function* messageIdGen() {
   }
 })();
 
-export const memoryDataStore = {
+export const memoryDataStore: IDataStore = {
   save: async (modelName: string, data: IData): Promise<string> => {
     const id = (data.id as string) || dataId.next().value;
     const records = getCollection(modelName).filter(record => record.id !== id);
@@ -43,7 +43,7 @@ export const memoryDataStore = {
     );
     log(
       `SEARCH - ${modelName}(${JSON.stringify(query)}) ${
-        records.length
+      records.length
       } records`,
     );
     return records;

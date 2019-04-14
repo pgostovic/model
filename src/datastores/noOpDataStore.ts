@@ -1,7 +1,7 @@
-import { IQuery } from '../datastore';
+import { IDataStore, IQuery } from '../datastore';
 import { IData } from '../model';
 
-export const noOpDataStore = {
+export const noOpDataStore: IDataStore = {
   save: async (modelName: string, data: IData): Promise<string> => {
     throw new Error(
       `Operation not permitted in this context: save / ${modelName} / ${data}`,
