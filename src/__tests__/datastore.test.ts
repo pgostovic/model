@@ -1,5 +1,5 @@
+import { setDefaultDataStore } from '../datastore';
 import {
-  datastore,
   field,
   find,
   IData,
@@ -17,7 +17,8 @@ interface IUserData extends IData {
   };
 }
 
-@datastore(memoryDataStore, 'users')
+setDefaultDataStore(memoryDataStore);
+
 class User extends Model<IUserData, User> {
   @field public email?: string;
   @field public firstName?: string;

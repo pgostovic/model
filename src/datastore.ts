@@ -10,6 +10,7 @@ export interface IDataStore {
 
 const dataStoresByModel = new Map<any, IDataStore>();
 
+// Decorator to mark a model's datastore
 export const datastore = (ds: IDataStore, collectionName?: string) => (
   modelClass: any,
 ) => {
@@ -17,8 +18,14 @@ export const datastore = (ds: IDataStore, collectionName?: string) => (
   dataStoresByModel.set(modelClass, ds);
 };
 
+let defaultDataStore: IDataStore;
+
+export const setDefaultDataStore = (ds: IDataStore) => {
+  defaultDataStore = ds;
+};
+
 const getDataStore = (modelClass: any): IDataStore => {
-  const ds = dataStoresByModel.get(modelClass);
+  const ds = dataStoresByModel.get(modelClass) || defaultDataStore;
   if (!ds) {
     throw new Error(`No datastore set for ${modelClass.collectionName}`);
   }
@@ -26,10 +33,10 @@ const getDataStore = (modelClass: any): IDataStore => {
 };
 
 export const saveData = (modelClass: any, data: IData) =>
-  getDataStore(modelClass).save(modelClass.collectionName, data);
+  getDataStore(modelClass).save(modelClass.collectionName || modelClass.name, data);
 
 export const findData = (modelClass: any, id: string) =>
-  getDataStore(modelClass).find(modelClass.collectionName, id);
+  getDataStore(modelClass).find(modelClass.collectionName || modelClass.name, id);
 
 export const searchData = (modelClass: any, query: IQuery) =>
-  getDataStore(modelClass).search(modelClass.collectionName, query);
+  getDataStore(modelClass).search(modelClass.collectionName || modelClass.name, query);
