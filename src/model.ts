@@ -1,5 +1,5 @@
 import md5 from 'md5';
-import { findData, IQuery, saveData, searchData } from './datastore';
+import { dropData, findData, IQuery, saveData, searchData } from './datastore';
 
 export type IValue = string | number | boolean | Date | IData | undefined;
 
@@ -60,6 +60,10 @@ const getClassId = (modelClass: any): string => {
 export abstract class Model<T = IData, C = any> {
   public static register() {
     modelClassesById.set(getClassId(this), this);
+  }
+
+  public static drop() {
+    return dropData(this);
   }
 
   @field public id?: string;

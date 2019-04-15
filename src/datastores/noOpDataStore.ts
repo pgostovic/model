@@ -19,4 +19,13 @@ export const noOpDataStore: IDataStore = {
       `Operation not permitted in this context: search / ${modelName} / ${query}`,
     );
   },
+
+  drop: async (modelName: string): Promise<boolean> => {
+    throw new Error(
+      `Operation not permitted in this context: drop / ${modelName}`,
+    );
+  },
+
+  // tslint:disable-next-line: no-empty
+  close: async () => { },
 };

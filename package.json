@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/jest": "^23.3.13",
     "@types/md5": "^2.1.33",
+    "@types/mongodb": "^3.1.23",
     "@types/node": "^10.12.18",
     "@types/rimraf": "^2.0.2",
     "jest": "^24.1.0",
@@ -30,6 +31,7 @@
   },
   "dependencies": {
     "@phnq/log": "^1.0.1",
-    "md5": "^2.2.1"
+    "md5": "^2.2.1",
+    "mongodb": "^3.2.3"
   }
 }

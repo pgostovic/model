@@ -48,6 +48,14 @@ export const memoryDataStore: IDataStore = {
     );
     return records;
   },
+
+  drop: async (modelName: string): Promise<boolean> => {
+    collections.set(modelName, []);
+    return true;
+  },
+
+  // tslint:disable-next-line: no-empty
+  close: async () => { },
 };
 
 const deepMatch = (query: IValue, data: IValue): boolean => {

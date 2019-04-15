@@ -1,3 +1,4 @@
+import { memoryDataStore } from './index.client';
 import { IData } from './model';
 
 export type IQuery = any;
@@ -6,6 +7,8 @@ export interface IDataStore {
   save: (modelName: string, data: IData) => Promise<string>;
   find: (modelName: string, id: string) => Promise<IData | undefined>;
   search: (modelName: string, query: IQuery) => Promise<IData[]>;
+  drop: (modelName: string) => Promise<boolean>;
+  close: () => Promise<void>;
 }
 
 const dataStoresByModel = new Map<any, IDataStore>();
@@ -18,7 +21,7 @@ export const datastore = (ds: IDataStore, collectionName?: string) => (
   dataStoresByModel.set(modelClass, ds);
 };
 
-let defaultDataStore: IDataStore;
+let defaultDataStore: IDataStore = memoryDataStore;
 
 export const setDefaultDataStore = (ds: IDataStore) => {
   defaultDataStore = ds;
@@ -40,3 +43,6 @@ export const findData = (modelClass: any, id: string) =>
 
 export const searchData = (modelClass: any, query: IQuery) =>
   getDataStore(modelClass).search(modelClass.collectionName || modelClass.name, query);
+
+export const dropData = (modelClass: any) =>
+  getDataStore(modelClass).drop(modelClass.collectionName || modelClass.name);
