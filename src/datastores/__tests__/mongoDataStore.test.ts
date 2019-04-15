@@ -1,6 +1,6 @@
 import { setDefaultDataStore } from '../../datastore';
 import { field, find, IData, Model, search } from '../../model';
-import MongoDataStore from '../mongoDataStore';
+import { MongoDataStore } from '../mongoDataStore';
 
 interface ICarData extends IData {
   email?: string;

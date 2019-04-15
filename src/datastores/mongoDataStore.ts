@@ -5,7 +5,7 @@ import { IData } from '../model';
 
 const log = createLogger('mongoDataStore');
 
-class MongoDataStore implements IDataStore {
+export class MongoDataStore implements IDataStore {
   private connUrl: string;
   private client?: mongodb.MongoClient;
 
@@ -98,4 +98,3 @@ const deMongify = (doc: IData | undefined): IData | undefined => {
   return undefined;
 };
 
-export default MongoDataStore;
