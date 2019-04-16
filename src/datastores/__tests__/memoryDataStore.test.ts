@@ -1,6 +1,6 @@
 import { setDefaultDataStore } from '../../datastore';
+import { memoryDataStore } from '../../index.server';
 import { field, find, IData, Model, search } from '../../model';
-import { MongoDataStore } from '../mongoDataStore';
 
 interface ICarData extends IData {
   email?: string;
@@ -12,9 +12,7 @@ interface ICarData extends IData {
   };
 }
 
-const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
-
-setDefaultDataStore(mongoDataStore);
+setDefaultDataStore(memoryDataStore);
 
 class Car extends Model<ICarData, Car> {
   @field public make?: string;
@@ -26,7 +24,7 @@ class Car extends Model<ICarData, Car> {
 }
 
 beforeEach(async () => {
-  await Car.drop()
+  await Car.drop();
 });
 
 test('Saved model gets id', async () => {
@@ -77,5 +75,5 @@ test('Search by sub-attribute, dot notation', async () => {
 });
 
 afterAll(async () => {
-  await mongoDataStore.close();
+  await memoryDataStore.close();
 });

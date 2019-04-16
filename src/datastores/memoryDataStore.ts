@@ -38,8 +38,9 @@ export const memoryDataStore: IDataStore = {
     modelName: string,
     query: IMemoryDataStoreQuery,
   ): Promise<IData[]> => {
+
     const records = getCollection(modelName).filter(record =>
-      deepMatch(query, record),
+      match(query, record),
     );
     log(
       `SEARCH - ${modelName}(${JSON.stringify(query)}) ${
@@ -58,13 +59,47 @@ export const memoryDataStore: IDataStore = {
   close: async () => { },
 };
 
-const deepMatch = (query: IValue, data: IValue): boolean => {
+const match = (query: IMemoryDataStoreQuery, record: IData): boolean => {
+  let isMatch = true;
+  Object.keys(query).forEach(k => {
+    if (k.match(/\./)) {
+      isMatch = isMatch && deepMatch(formatDotQuery(k, query[k]), record, false);
+    } else {
+      isMatch = isMatch && deepMatch({ [k]: query[k] }, record, true);
+    }
+  });
+  return isMatch;
+};
+
+const formatDotQuery = (dotQuery: string, value: IValue): IData => {
+  const formattedQuery: IData = {};
+  let q = formattedQuery;
+  const comps = dotQuery.split('.');
+  const last = comps.splice(-1)[0];
+  comps.forEach(comp => {
+    q = q[comp] = {};
+  });
+  q[last] = value;
+  return formattedQuery;
+};
+
+const deepMatch = (query: IValue, data: IValue, matchAll: boolean): boolean => {
   if (query instanceof Array && data instanceof Array) {
-    return !query.find((item, i) => !deepMatch(item, data[i]));
+    if (matchAll) {
+      return !query.find((item, i) => !deepMatch(item, data[i], matchAll));
+    } else {
+      return !!query.find((item, i) => deepMatch(item, data[i], matchAll));
+    }
   } else if (typeof query === 'object' && typeof data === 'object') {
-    return !Object.keys(query).find(
-      k => !deepMatch((query as any)[k], (data as any)[k]),
-    );
+    if (matchAll) {
+      return !Object.keys(query).find(
+        k => !deepMatch((query as any)[k], (data as any)[k], matchAll),
+      );
+    } else {
+      return !!Object.keys(query).find(
+        k => deepMatch((query as any)[k], (data as any)[k], matchAll),
+      );
+    }
   }
   return query === data;
 };
