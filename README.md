@@ -1,4 +1,8 @@
-# @phnq/model [![CircleCI](https://circleci.com/gh/pgostovic/message.svg?style=svg)](https://circleci.com/gh/pgostovic/model)
+# @phnq/model
+
+[![CircleCI](https://circleci.com/gh/pgostovic/message.svg?style=svg)](https://circleci.com/gh/pgostovic/model)
+
+[![npm version](https://badge.fury.io/js/%40phnq%2Fmodel.svg)](https://badge.fury.io/js/%40phnq%2Fmodel)
 
 Isomorphic library for modeling entities.
 
