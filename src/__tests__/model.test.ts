@@ -1,24 +1,23 @@
 /* tslint:disable max-classes-per-file */
 
-import { field, Model, mutable } from '../index.server';
+import { Model } from '../index.server';
+import { IModel } from '../model';
 
-interface IUserData {
-  email?: string;
+interface IUserData extends IModel {
+  email: string;
   firstName?: string;
   lastName?: string;
 }
 
 class User extends Model<IUserData> {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
-}
+  public email: string;
+  public firstName?: string;
+  public lastName?: string;
 
-@mutable
-class MutableUser extends Model<IUserData> {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
+  constructor(data: IUserData) {
+    super(data);
+    this.email = data.email;
+  }
 }
 
 interface IWithDefaultData {
@@ -27,8 +26,8 @@ interface IWithDefaultData {
 }
 
 class WithDefault extends Model<IWithDefaultData> {
-  @field public num?: number;
-  @field public isStuff?: boolean;
+  public num?: number;
+  public isStuff?: boolean;
 
   constructor(data: IWithDefaultData) {
     super({ isStuff: false, ...data });
@@ -40,7 +39,7 @@ interface IWithDateData {
 }
 
 class WithDate extends Model<IWithDateData> {
-  @field public date?: Date;
+  public date?: Date;
 }
 
 test('new model instance', () => {
@@ -55,33 +54,20 @@ test('new model instance', () => {
   expect(user.lastName).toBe('Gump');
 });
 
-test('new model instance with unsupported keys', () => {
-  expect(() => {
-    const user = new User({
-      bread: 'rye',
-      cheese: 'cheddar',
-      email: 'user@test.com',
-      firstName: 'Bubba',
-      lastName: 'Gump',
-    });
-    expect(user).toBeNull();
-  }).toThrow();
-});
-
-test('may not mutate model instance', () => {
+test('may not mutate a frozen model instance', () => {
   const user = new User({
     email: 'user@test.com',
     firstName: 'Bubba',
     lastName: 'Gump',
-  });
+  }).freeze();
 
   expect(() => {
     user.email = 'bubba@gump.com';
   }).toThrow();
 });
 
-test('may mutate instance of model marked mutable', () => {
-  const user = new MutableUser({
+test('may mutate instance of model', () => {
+  const user = new User({
     email: 'user@test.com',
     firstName: 'Bubba',
     lastName: 'Gump',
@@ -99,6 +85,7 @@ test('copy model instance', () => {
   const user = new User({
     email: 'user@test.com',
     firstName: 'Bubba',
+    id: 'abcd1234',
     lastName: 'Gump',
   });
 

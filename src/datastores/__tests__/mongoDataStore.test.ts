@@ -1,5 +1,5 @@
 import { setDefaultDataStore } from '../../datastore';
-import { field, find, IData, Model, search } from '../../model';
+import { find, IData, Model, search } from '../../model';
 import { MongoDataStore } from '../mongoDataStore';
 
 interface ICarData extends IData {
@@ -12,21 +12,23 @@ interface ICarData extends IData {
   };
 }
 
-const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
+const mongoDataStore = new MongoDataStore(
+  process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest',
+);
 
 setDefaultDataStore(mongoDataStore);
 
-class Car extends Model<ICarData, Car> {
-  @field public make?: string;
-  @field public model?: string;
-  @field public colour?: string;
-  @field public stuff?: {
+class Car extends Model<ICarData> {
+  public make?: string;
+  public model?: string;
+  public colour?: string;
+  public stuff?: {
     foo: number;
   };
 }
 
 beforeEach(async () => {
-  await Car.drop()
+  await Car.drop();
 });
 
 test('Saved model gets id', async () => {
@@ -61,7 +63,12 @@ test('Search by attribute', async () => {
 });
 
 test('Search by sub-attribute', async () => {
-  const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow', stuff: { foo: 42, bar: 43 } });
+  const car = new Car({
+    make: 'Volvo',
+    model: 'XC-90',
+    colour: 'Willow',
+    stuff: { foo: 42, bar: 43 },
+  });
   await car.save();
 
   const results = await search(Car, { stuff: { foo: 42, bar: 43 } });
@@ -69,7 +76,12 @@ test('Search by sub-attribute', async () => {
 });
 
 test('Search by sub-attribute, dot notation', async () => {
-  const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow', stuff: { foo: 42, bar: 43 } });
+  const car = new Car({
+    make: 'Volvo',
+    model: 'XC-90',
+    colour: 'Willow',
+    stuff: { foo: 42, bar: 43 },
+  });
   await car.save();
 
   const results = await search(Car, { 'stuff.foo': 42 });

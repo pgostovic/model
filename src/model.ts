@@ -7,8 +7,6 @@ export interface IData {
   [key: string]: IValue | IValue[];
 }
 
-const isMutableByModel = new Map<any, boolean>();
-const fieldNamesByModel = new Map<any, string[]>();
 const modelClassesById = new Map<string, any>();
 
 export const fromJS = <T extends Model<IData>>(js: IData): T => {
@@ -26,38 +24,19 @@ export const fromJS = <T extends Model<IData>>(js: IData): T => {
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const field = ((): any => (
-  model: Model<IData>,
-  fieldName: string,
-): void => {
-  const modelClass = model.constructor;
-  let fieldNames = fieldNamesByModel.get(modelClass);
-  if (!fieldNames) {
-    fieldNames = [];
-    fieldNamesByModel.set(modelClass, fieldNames);
-  }
-  fieldNames.push(fieldName);
-})();
-
-export const mutable = ((): any => (modelClass: new () => Model) => {
-  isMutableByModel.set(modelClass, true);
-})();
-
 export const classId = (cid: string): any => (modelClass: any) => {
   modelClass.cid = cid;
 };
 
-const getFieldNames = (modelClass: any): string[] => {
-  return (fieldNamesByModel.get(modelClass) || []).concat(
-    fieldNamesByModel.get(Model) || [],
-  );
-};
-
 const getClassId = (modelClass: any): string => {
-  return modelClass.cid || md5([...getFieldNames(modelClass)].sort().join(' '));
+  return modelClass.cid || md5(modelClass.name);
 };
 
-export abstract class Model<T = IData, C = any> {
+export interface IModel {
+  id?: string;
+}
+
+export abstract class Model<T = IData> implements IModel {
   public static register() {
     modelClassesById.set(getClassId(this), this);
   }
@@ -66,35 +45,29 @@ export abstract class Model<T = IData, C = any> {
     return dropData(this);
   }
 
-  @field public id?: string;
+  public id?: string;
 
-  constructor(data: T & IData) {
-    const fieldNames = getFieldNames(this.constructor);
-
-    const unsupportedKeys = Object.keys(data).filter(
-      k => !fieldNames.includes(k),
-    );
-
-    if (unsupportedKeys.length > 0) {
-      throw new Error(`Unsupported keys: ${unsupportedKeys.join(', ')}`);
-    }
+  constructor(data: T & IModel) {
+    const fieldNames = Object.keys(data) as Array<keyof T & IModel>;
 
     for (const fieldName of fieldNames) {
       Object.defineProperty(this, fieldName, {
         enumerable: true,
         value: data[fieldName],
-        writable: this.isMutable(),
+        writable: true,
       });
     }
-
-    Object.seal(this);
   }
 
-  public async save(): Promise<C> {
+  public freeze(): T & IModel {
+    return Object.freeze<T & IModel>((this as unknown) as T & IModel);
+  }
+
+  public async save(): Promise<T & IModel> {
     const id = await saveData(this.constructor, this.getData());
-    if (this.isMutable()) {
+    if (Object.isFrozen(this)) {
       this.id = id;
-      return (this as any) as C;
+      return (this as any) as T & IModel;
     }
     return new (this.constructor as any)({ ...this.getData(), id });
   }
@@ -106,13 +79,10 @@ export abstract class Model<T = IData, C = any> {
     };
   }
 
-  private isMutable(): boolean {
-    return isMutableByModel.get(this.constructor) || false;
-  }
-
   private getData(): IData {
     const data: IData = {};
-    getFieldNames(this.constructor).forEach((key: string) => {
+    const fieldNames = Object.keys(this);
+    fieldNames.forEach((key: string) => {
       const propDesc = Object.getOwnPropertyDescriptor(this, key);
       data[key] = (propDesc || {}).value;
     });
