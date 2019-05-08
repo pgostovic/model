@@ -1,6 +1,5 @@
 import {
   datastore,
-  field,
   find,
   IData,
   memoryDataStore,
@@ -15,10 +14,10 @@ interface IUserData extends IData {
 }
 
 @datastore(memoryDataStore, 'users')
-class User extends Model<IUserData, User> {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
+class User extends Model<IUserData> {
+  public email?: string;
+  public firstName?: string;
+  public lastName?: string;
 }
 
 test('save model instance throws on client', async () => {

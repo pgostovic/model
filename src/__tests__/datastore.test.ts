@@ -1,12 +1,5 @@
 import { setDefaultDataStore } from '../datastore';
-import {
-  field,
-  find,
-  IData,
-  memoryDataStore,
-  Model,
-  search,
-} from '../index.server';
+import { find, IData, memoryDataStore, Model, search } from '../index.server';
 
 interface IUserData extends IData {
   email?: string;
@@ -19,11 +12,11 @@ interface IUserData extends IData {
 
 setDefaultDataStore(memoryDataStore);
 
-class User extends Model<IUserData, User> {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
-  @field public stuff?: { foo: number };
+class User extends Model<IUserData> {
+  public email?: string;
+  public firstName?: string;
+  public lastName?: string;
+  public stuff?: { foo: number };
 }
 
 test('save model instance', async () => {
