@@ -1,6 +1,6 @@
 import { setDefaultDataStore } from '../../datastore';
 import { memoryDataStore } from '../../index.server';
-import { field, find, IData, Model, search } from '../../model';
+import { find, IData, Model, search } from '../../model';
 
 interface ICarData extends IData {
   email?: string;
@@ -14,11 +14,11 @@ interface ICarData extends IData {
 
 setDefaultDataStore(memoryDataStore);
 
-class Car extends Model<ICarData, Car> {
-  @field public make?: string;
-  @field public model?: string;
-  @field public colour?: string;
-  @field public stuff?: {
+class Car extends Model<ICarData> {
+  public make?: string;
+  public model?: string;
+  public colour?: string;
+  public stuff?: {
     foo: number;
   };
 }
@@ -59,7 +59,12 @@ test('Search by attribute', async () => {
 });
 
 test('Search by sub-attribute', async () => {
-  const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow', stuff: { foo: 42, bar: 43 } });
+  const car = new Car({
+    make: 'Volvo',
+    model: 'XC-90',
+    colour: 'Willow',
+    stuff: { foo: 42, bar: 43 },
+  });
   await car.save();
 
   const results = await search(Car, { stuff: { foo: 42, bar: 43 } });
@@ -67,7 +72,12 @@ test('Search by sub-attribute', async () => {
 });
 
 test('Search by sub-attribute, dot notation', async () => {
-  const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow', stuff: { foo: 42, bar: 43 } });
+  const car = new Car({
+    make: 'Volvo',
+    model: 'XC-90',
+    colour: 'Willow',
+    stuff: { foo: 42, bar: 43 },
+  });
   await car.save();
 
   const results = await search(Car, { 'stuff.foo': 42 });
