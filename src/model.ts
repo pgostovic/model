@@ -32,6 +32,7 @@ const getClassId = (modelClass: any): string => {
   return modelClass.cid || md5(modelClass.name);
 };
 
+// TODO: restrict values to IValue type
 export interface IModel {
   id?: string;
 }
