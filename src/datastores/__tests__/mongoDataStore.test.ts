@@ -12,9 +12,7 @@ interface ICarData extends IModel {
   };
 }
 
-const mongoDataStore = new MongoDataStore(
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest',
-);
+const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
 
 setDefaultDataStore(mongoDataStore);
 

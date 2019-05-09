@@ -4,19 +4,17 @@ import { IData } from './model';
 export type IQuery = any;
 
 export interface IDataStore {
-  save: (modelName: string, data: IData) => Promise<string>;
-  find: (modelName: string, id: string) => Promise<IData | undefined>;
-  search: (modelName: string, query: IQuery) => Promise<IData[]>;
-  drop: (modelName: string) => Promise<boolean>;
-  close: () => Promise<void>;
+  save(modelName: string, data: IData): Promise<string>;
+  find(modelName: string, id: string): Promise<IData | undefined>;
+  search(modelName: string, query: IQuery): Promise<IData[]>;
+  drop(modelName: string): Promise<boolean>;
+  close(): Promise<void>;
 }
 
 const dataStoresByModel = new Map<any, IDataStore>();
 
 // Decorator to mark a model's datastore
-export const datastore = (ds: IDataStore, collectionName?: string) => (
-  modelClass: any,
-) => {
+export const datastore = (ds: IDataStore, collectionName?: string) => (modelClass: any) => {
   modelClass.collectionName = collectionName || modelClass.name;
   dataStoresByModel.set(modelClass, ds);
 };

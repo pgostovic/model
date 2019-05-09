@@ -1,11 +1,4 @@
-import {
-  datastore,
-  find,
-  IModel,
-  memoryDataStore,
-  Model,
-  search,
-} from '../index.client';
+import { datastore, find, IModel, memoryDataStore, Model, search } from '../index.client';
 
 interface IUserData extends IModel {
   email?: string;

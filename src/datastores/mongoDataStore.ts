@@ -40,7 +40,7 @@ export class MongoDataStore implements IDataStore {
       if (data) {
         results.push(data);
       }
-    })
+    });
 
     return results;
   }
@@ -60,16 +60,20 @@ export class MongoDataStore implements IDataStore {
     return (await this.getClient()).close();
   }
 
+  public async createIndex(modelName: string, spec: any, options: any): Promise<void> {
+    const col = await this.collection(modelName);
+    return col.createIndex(spec, options);
+  }
+
   private async collection(name: string) {
     return (await this.getClient()).db().collection(name);
   }
 
   private async getClient() {
     if (!this.client) {
-      this.client = await mongodb.MongoClient.connect(
-        this.connUrl,
-        { useNewUrlParser: true },
-      );
+      this.client = await mongodb.MongoClient.connect(this.connUrl, {
+        useNewUrlParser: true,
+      });
     }
     return this.client;
   }
@@ -97,4 +101,3 @@ const deMongify = (doc: IData | undefined): IData | undefined => {
   }
   return undefined;
 };
-

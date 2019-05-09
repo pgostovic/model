@@ -34,19 +34,9 @@ export const memoryDataStore: IDataStore = {
     return record;
   },
 
-  search: async (
-    modelName: string,
-    query: IMemoryDataStoreQuery,
-  ): Promise<IData[]> => {
-
-    const records = getCollection(modelName).filter(record =>
-      match(query, record),
-    );
-    log(
-      `SEARCH - ${modelName}(${JSON.stringify(query)}) ${
-      records.length
-      } records`,
-    );
+  search: async (modelName: string, query: IMemoryDataStoreQuery): Promise<IData[]> => {
+    const records = getCollection(modelName).filter(record => match(query, record));
+    log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
     return records;
   },
 
@@ -56,7 +46,7 @@ export const memoryDataStore: IDataStore = {
   },
 
   // tslint:disable-next-line: no-empty
-  close: async () => { },
+  close: async () => {},
 };
 
 const match = (query: IMemoryDataStoreQuery, record: IData): boolean => {
@@ -92,13 +82,9 @@ const deepMatch = (query: IValue, data: IValue, matchAll: boolean): boolean => {
     }
   } else if (typeof query === 'object' && typeof data === 'object') {
     if (matchAll) {
-      return !Object.keys(query).find(
-        k => !deepMatch((query as any)[k], (data as any)[k], matchAll),
-      );
+      return !Object.keys(query).find(k => !deepMatch((query as any)[k], (data as any)[k], matchAll));
     } else {
-      return !!Object.keys(query).find(
-        k => deepMatch((query as any)[k], (data as any)[k], matchAll),
-      );
+      return !!Object.keys(query).find(k => deepMatch((query as any)[k], (data as any)[k], matchAll));
     }
   }
   return query === data;

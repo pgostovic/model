@@ -89,10 +89,7 @@ export abstract class Model<T extends IModel> {
   }
 }
 
-export const find = async <T>(
-  c: new (...args: any[]) => T,
-  id?: string,
-): Promise<T | undefined> => {
+export const find = async <T>(c: new (...args: any[]) => T, id?: string): Promise<T | undefined> => {
   if (id) {
     const data = await findData(c, id);
     if (data) {
@@ -102,7 +99,5 @@ export const find = async <T>(
   return undefined;
 };
 
-export const search = async <T>(
-  c: new (...args: any[]) => T,
-  query: IQuery,
-): Promise<T[]> => (await searchData(c, query)).map(data => new c(data));
+export const search = async <T>(c: new (...args: any[]) => T, query: IQuery): Promise<T[]> =>
+  (await searchData(c, query)).map(data => new c(data));
