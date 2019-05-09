@@ -1,11 +1,11 @@
 import { setDefaultDataStore } from '../../datastore';
-import { find, IData, Model, search } from '../../model';
+import { find, IModel, Model, search } from '../../model';
 import { MongoDataStore } from '../mongoDataStore';
 
-interface ICarData extends IData {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
+interface ICarData extends IModel {
+  make?: string;
+  model?: string;
+  colour?: string;
   stuff?: {
     foo: number;
     bar: number;
@@ -24,6 +24,7 @@ class Car extends Model<ICarData> {
   public colour?: string;
   public stuff?: {
     foo: number;
+    bar: number;
   };
 }
 

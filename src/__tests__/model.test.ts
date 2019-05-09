@@ -20,7 +20,7 @@ class User extends Model<IUserData> {
   }
 }
 
-interface IWithDefaultData {
+interface IWithDefaultData extends IModel {
   num?: number;
   isStuff?: boolean;
 }
@@ -34,7 +34,7 @@ class WithDefault extends Model<IWithDefaultData> {
   }
 }
 
-interface IWithDateData {
+interface IWithDateData extends IModel {
   date?: Date;
 }
 

@@ -1,7 +1,7 @@
 import { setDefaultDataStore } from '../datastore';
-import { find, IData, memoryDataStore, Model, search } from '../index.server';
+import { find, IModel, memoryDataStore, Model, search } from '../index.server';
 
-interface IUserData extends IData {
+interface IUserData extends IModel {
   email?: string;
   firstName?: string;
   lastName?: string;

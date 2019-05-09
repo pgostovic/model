@@ -1,13 +1,13 @@
-import { fromJS, IData, Model } from '../index.server';
+import { fromJS, IModel, Model } from '../index.server';
 
-interface IUserData extends IData {
+interface IUserData extends IModel {
   email?: string;
   firstName?: string;
   lastName?: string;
   locations: ILocation[];
 }
 
-interface ILocation extends IData {
+interface ILocation {
   name: string;
   street: string;
   city: string;
@@ -45,7 +45,7 @@ test('serialize/deserialize', () => {
   });
 
   const userJS = user.toJS();
-  const userFromJS = fromJS(userJS) as User;
+  const userFromJS = fromJS<User>(userJS);
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);

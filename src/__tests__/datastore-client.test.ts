@@ -1,13 +1,13 @@
 import {
   datastore,
   find,
-  IData,
+  IModel,
   memoryDataStore,
   Model,
   search,
 } from '../index.client';
 
-interface IUserData extends IData {
+interface IUserData extends IModel {
   email?: string;
   firstName?: string;
   lastName?: string;

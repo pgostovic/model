@@ -9,7 +9,7 @@ export interface IData {
 
 const modelClassesById = new Map<string, any>();
 
-export const fromJS = <T extends Model<IData>>(js: IData): T => {
+export const fromJS = <T>(js: IData): T => {
   const cid = js._cid_ as string;
   const modelClass = modelClassesById.get(cid);
   if (modelClass) {
@@ -36,7 +36,7 @@ export interface IModel {
   id?: string;
 }
 
-export abstract class Model<T = IData> implements IModel {
+export abstract class Model<T extends IModel> {
   public static register() {
     modelClassesById.set(getClassId(this), this);
   }
@@ -47,8 +47,8 @@ export abstract class Model<T = IData> implements IModel {
 
   public id?: string;
 
-  constructor(data: T & IModel) {
-    const fieldNames = Object.keys(data) as Array<keyof T & IModel>;
+  constructor(data: T) {
+    const fieldNames = Object.keys(data) as Array<keyof T>;
 
     for (const fieldName of fieldNames) {
       Object.defineProperty(this, fieldName, {
@@ -59,15 +59,15 @@ export abstract class Model<T = IData> implements IModel {
     }
   }
 
-  public freeze(): T & IModel {
-    return Object.freeze<T & IModel>((this as unknown) as T & IModel);
+  public freeze(): T {
+    return Object.freeze<T>((this as unknown) as T);
   }
 
-  public async save(): Promise<T & IModel> {
+  public async save(): Promise<T> {
     const id = await saveData(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
       this.id = id;
-      return (this as any) as T & IModel;
+      return (this as any) as T;
     }
     return new (this.constructor as any)({ ...this.getData(), id });
   }
@@ -81,16 +81,14 @@ export abstract class Model<T = IData> implements IModel {
 
   private getData(): IData {
     const data: IData = {};
-    const fieldNames = Object.keys(this);
-    fieldNames.forEach((key: string) => {
-      const propDesc = Object.getOwnPropertyDescriptor(this, key);
-      data[key] = (propDesc || {}).value;
+    Object.keys(this).forEach((key: string) => {
+      data[key] = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
     });
     return data;
   }
 }
 
-export const find = async <T extends Model<IData>>(
+export const find = async <T>(
   c: new (...args: any[]) => T,
   id?: string,
 ): Promise<T | undefined> => {
@@ -103,7 +101,7 @@ export const find = async <T extends Model<IData>>(
   return undefined;
 };
 
-export const search = async <T extends Model<IData>>(
+export const search = async <T>(
   c: new (...args: any[]) => T,
   query: IQuery,
 ): Promise<T[]> => (await searchData(c, query)).map(data => new c(data));
