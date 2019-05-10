@@ -1,5 +1,5 @@
 import md5 from 'md5';
-import { dropData, findData, IQuery, saveData, searchData } from './datastore';
+import { dropData, findData, IOptions, IQuery, saveData, searchData } from './datastore';
 
 export type IValue = string | number | boolean | Date | IData | undefined;
 
@@ -99,5 +99,8 @@ export const find = async <T>(c: new (...args: any[]) => T, id?: string): Promis
   return undefined;
 };
 
-export const search = async <T>(c: new (...args: any[]) => T, query: IQuery): Promise<T[]> =>
-  (await searchData(c, query)).map(data => new c(data));
+export const search = async <T>(
+  c: new (...args: any[]) => T,
+  query: IQuery,
+  options: IOptions = undefined,
+): Promise<T[]> => (await searchData(c, query, options)).map(data => new c(data));

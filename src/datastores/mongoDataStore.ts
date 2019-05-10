@@ -1,6 +1,6 @@
 import { createLogger } from '@phnq/log';
 import mongodb from 'mongodb';
-import { IDataStore, IQuery } from '../datastore';
+import { IDataStore, IOptions, IQuery } from '../datastore';
 import { IData } from '../model';
 
 const log = createLogger('mongoDataStore');
@@ -31,11 +31,11 @@ export class MongoDataStore implements IDataStore {
     return deMongify((await col.findOne({ _id: new mongodb.ObjectId(id) })) || undefined);
   }
 
-  public async search(modelName: string, query: IQuery): Promise<IData[]> {
+  public async search(modelName: string, query: IQuery, options: IOptions): Promise<IData[]> {
     const col = await this.collection(modelName);
 
     const results: IData[] = [];
-    await col.find(query).forEach(doc => {
+    await col.find(query, options).forEach(doc => {
       const data = deMongify(doc);
       if (data) {
         results.push(data);
