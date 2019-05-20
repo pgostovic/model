@@ -35,12 +35,20 @@ test('Saved model gets id', async () => {
   expect(savedCar.id).not.toBeUndefined();
 });
 
-test('Retrieve by id', async () => {
+test('Retrieve by id, update', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   const savedCar = await car.save();
   const foundCar = await find(Car, savedCar.id);
   if (foundCar) {
     expect(foundCar.id).toBe(savedCar.id);
+
+    foundCar.colour = 'Yellow';
+    await foundCar.save();
+
+    const foundUpdatedCar = await find(Car, savedCar.id);
+    if (foundUpdatedCar) {
+      expect(foundUpdatedCar.colour).toBe('Yellow');
+    }
   }
 });
 

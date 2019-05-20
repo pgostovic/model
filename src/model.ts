@@ -60,17 +60,18 @@ export abstract class Model<T extends IModel> {
     }
   }
 
-  public freeze(): T {
-    return Object.freeze<T>((this as unknown) as T);
+  public freeze() {
+    Object.freeze(this);
+    return this;
   }
 
   public async save(): Promise<T> {
     const id = await saveData(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
-      this.id = id;
-      return (this as any) as T;
+      return new (this.constructor as any)({ ...this.getData(), id });
     }
-    return new (this.constructor as any)({ ...this.getData(), id });
+    this.id = id;
+    return (this as any) as T;
   }
 
   public toJS(): IData {

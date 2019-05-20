@@ -45,3 +45,12 @@ test('search for model instances throws on client', async () => {
     expect(err).toBeInstanceOf(Error);
   }
 });
+
+test('drop model throws on client', async () => {
+  try {
+    await User.drop();
+    fail('Should have thrown');
+  } catch (err) {
+    expect(err).toBeInstanceOf(Error);
+  }
+});

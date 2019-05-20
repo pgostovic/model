@@ -17,9 +17,7 @@ export class MongoDataStore implements IDataStore {
     const col = await this.collection(modelName);
     const id = data.id as string;
     if (id) {
-      const dataCopy = { ...data };
-      delete dataCopy.id;
-      await col.updateOne({ _id: new mongodb.ObjectId(id) }, { $set: dataCopy });
+      await col.updateOne({ _id: new mongodb.ObjectId(id) }, { $set: mongify(data) });
       return id;
     } else {
       return String((await col.insertOne(mongify(data))).insertedId);
@@ -28,7 +26,12 @@ export class MongoDataStore implements IDataStore {
 
   public async find(modelName: string, id: string): Promise<IData | undefined> {
     const col = await this.collection(modelName);
-    return deMongify((await col.findOne({ _id: new mongodb.ObjectId(id) })) || undefined);
+    try {
+      return deMongify((await col.findOne({ _id: new mongodb.ObjectId(id) })) || undefined);
+    } catch (err) {
+      log('Error finding document', err);
+      return undefined;
+    }
   }
 
   public async search(modelName: string, query: IQuery, options: IOptions): Promise<IData[]> {
@@ -93,11 +96,11 @@ const mongify = (data: IData) => {
 };
 
 const deMongify = (doc: IData | undefined): IData | undefined => {
-  if (doc) {
-    const id = doc._id ? doc._id.toString() : undefined;
+  if (doc && doc._id) {
+    const id = doc._id.toString();
     const docCopy = { ...doc, _id: undefined, id };
     delete docCopy._id;
     return docCopy as IData;
   }
-  return undefined;
+  return doc;
 };

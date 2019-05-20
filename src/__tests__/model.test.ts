@@ -1,7 +1,7 @@
 /* tslint:disable max-classes-per-file */
 
 import { Model } from '../index.server';
-import { IModel } from '../model';
+import { classId, fromJS, IModel } from '../model';
 
 interface IUserData extends IModel {
   email: string;
@@ -18,6 +18,15 @@ class User extends Model<IUserData> {
     super(data);
     this.email = data.email;
   }
+}
+
+interface IWithExplicitClassIdData extends IModel {
+  stuff?: string;
+}
+
+@classId('MyClassId')
+class WithExplicitClassId extends Model<IWithExplicitClassIdData> {
+  public stuff?: string;
 }
 
 interface IWithDefaultData extends IModel {
@@ -137,4 +146,16 @@ test('with date field', () => {
   });
 
   expect(w.date).toBe(date);
+});
+
+test('fromJS with non-existent class id', () => {
+  expect(() => {
+    fromJS({ nothing: 'much' });
+  }).toThrow();
+});
+
+test('Explicit class Id', () => {
+  const obj = new WithExplicitClassId({ stuff: 'yo' });
+
+  expect(obj.toJS()._cid_).toBe('MyClassId');
 });

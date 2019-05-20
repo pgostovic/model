@@ -30,6 +30,24 @@ beforeEach(async () => {
   await Car.drop();
 });
 
+test('Create index', async () => {
+  expect(async () => {
+    await mongoDataStore.createIndex('Car', { make: 1 }, {});
+  }).not.toThrow();
+});
+
+test('Drop non-existent collection', async () => {
+  expect(await mongoDataStore.drop('Abcdefghijklmnopqrstuvwxyz')).toBe(false);
+});
+
+test('Find by bad format id returns undefined', async () => {
+  expect(await find(Car, 'nope')).toBeUndefined();
+});
+
+test('Find by non-existent id returns undefined', async () => {
+  expect(await find(Car, 'abcdef123456')).toBeUndefined();
+});
+
 test('Saved model gets id', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   expect(car.id).toBeUndefined();
@@ -37,12 +55,20 @@ test('Saved model gets id', async () => {
   expect(savedCar.id).not.toBeUndefined();
 });
 
-test('Retrieve by id', async () => {
+test('Retrieve by id, update', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   const savedCar = await car.save();
   const foundCar = await find(Car, savedCar.id);
   if (foundCar) {
     expect(foundCar.id).toBe(savedCar.id);
+
+    foundCar.colour = 'Yellow';
+    await foundCar.save();
+
+    const foundUpdatedCar = await find(Car, savedCar.id);
+    if (foundUpdatedCar) {
+      expect(foundUpdatedCar.colour).toBe('Yellow');
+    }
   }
 });
 

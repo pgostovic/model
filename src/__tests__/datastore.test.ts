@@ -28,6 +28,20 @@ test('save model instance', async () => {
 
   expect(user.id).toBeUndefined();
   const savedUser = await user.save();
+  expect(savedUser).toBe(user);
+  expect(savedUser.id).not.toBeUndefined();
+});
+
+test('save frozen model instance', async () => {
+  const user = new User({
+    email: 'user@test.com',
+    firstName: 'Bubba',
+    lastName: 'Gump',
+  }).freeze();
+
+  expect(user.id).toBeUndefined();
+  const savedUser = await user.save();
+  expect(savedUser).not.toBe(user);
   expect(savedUser.id).not.toBeUndefined();
 });
 
