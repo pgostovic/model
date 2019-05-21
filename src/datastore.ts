@@ -1,4 +1,4 @@
-import { memoryDataStore } from './index.client';
+import { noOpDataStore } from './datastores/noOpDataStore';
 import { IData } from './model';
 
 export type IQuery = any;
@@ -20,7 +20,7 @@ export const datastore = (ds: IDataStore, collectionName?: string) => (modelClas
   dataStoresByModel.set(modelClass, ds);
 };
 
-let defaultDataStore: IDataStore = memoryDataStore;
+let defaultDataStore: IDataStore = noOpDataStore;
 
 export const setDefaultDataStore = (ds: IDataStore) => {
   defaultDataStore = ds;

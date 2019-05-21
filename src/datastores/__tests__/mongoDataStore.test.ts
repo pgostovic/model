@@ -1,5 +1,4 @@
-import { setDefaultDataStore } from '../../datastore';
-import { find, IModel, Model, search } from '../../model';
+import { find, IModel, Model, search, setDefaultDataStore } from '../../index';
 import { MongoDataStore } from '../mongoDataStore';
 
 interface ICarData extends IModel {

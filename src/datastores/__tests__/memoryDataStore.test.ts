@@ -1,6 +1,5 @@
-import { setDefaultDataStore } from '../../datastore';
-import { memoryDataStore } from '../../index.server';
-import { find, IModel, Model, search } from '../../model';
+import { find, IModel, Model, search, setDefaultDataStore } from '../../index';
+import { memoryDataStore } from '../memoryDataStore';
 
 interface ICarData extends IModel {
   make?: string;

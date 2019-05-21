@@ -1,5 +1,7 @@
-import { setDefaultDataStore } from '../datastore';
-import { find, IModel, memoryDataStore, Model, search } from '../index.server';
+// tslint:disable: max-classes-per-file
+import { memoryDataStore } from '../datastores/memoryDataStore';
+import { noOpDataStore } from '../datastores/noOpDataStore';
+import { datastore, find, IModel, Model, search, setDefaultDataStore } from '../index';
 
 interface IUserData extends IModel {
   email?: string;
@@ -13,6 +15,14 @@ interface IUserData extends IModel {
 setDefaultDataStore(memoryDataStore);
 
 class User extends Model<IUserData> {
+  public email?: string;
+  public firstName?: string;
+  public lastName?: string;
+  public stuff?: { foo: number };
+}
+
+@datastore(noOpDataStore)
+class UserNoOp extends Model<IUserData> {
   public email?: string;
   public firstName?: string;
   public lastName?: string;
@@ -146,4 +156,14 @@ test('deep search', async () => {
     stuff: { foo: 43 },
   });
   expect(bubba43s.length).toBe(0);
+});
+
+test('datastore decorator', async () => {
+  const noSave = new UserNoOp({ firstName: 'No', lastName: 'Save' });
+  try {
+    await noSave.save();
+    fail('Should have thrown');
+  } catch (err) {
+    expect(err).toBeInstanceOf(Error);
+  }
 });

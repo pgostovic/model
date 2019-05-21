@@ -1,4 +1,4 @@
-import { datastore, find, IModel, memoryDataStore, Model, search } from '../index.client';
+import { find, IModel, Model, search } from '../index';
 
 interface IUserData extends IModel {
   email?: string;
@@ -6,7 +6,6 @@ interface IUserData extends IModel {
   lastName?: string;
 }
 
-@datastore(memoryDataStore, 'users')
 class User extends Model<IUserData> {
   public email?: string;
   public firstName?: string;

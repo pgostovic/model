@@ -1,7 +1,6 @@
 /* tslint:disable max-classes-per-file */
 
-import { Model } from '../index.server';
-import { classId, fromJS, IModel } from '../model';
+import { classId, fromJS, IModel, Model } from '../index';
 
 interface IUserData extends IModel {
   email: string;
