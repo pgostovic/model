@@ -11,6 +11,7 @@ export class PostgresDataStore implements IDataStore {
 
   constructor(connUrl: string) {
     this.connUrl = connUrl;
+    log('connUrl', this.connUrl);
   }
 
   public async save(modelName: string, data: IData): Promise<string> {
