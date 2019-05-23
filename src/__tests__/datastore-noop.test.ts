@@ -1,15 +1,9 @@
-import { find, IModel, Model, search } from '../index';
+import { field, find, Model, search } from '../index';
 
-interface IUserData extends IModel {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-}
-
-class User extends Model<IUserData> {
-  public email?: string;
-  public firstName?: string;
-  public lastName?: string;
+class User extends Model {
+  @field public email?: string;
+  @field public firstName?: string;
+  @field public lastName?: string;
 }
 
 test('save model instance throws on client', async () => {

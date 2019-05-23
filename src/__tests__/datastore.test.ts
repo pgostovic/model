@@ -1,32 +1,23 @@
 // tslint:disable: max-classes-per-file
 import { memoryDataStore } from '../datastores/memoryDataStore';
 import { noOpDataStore } from '../datastores/noOpDataStore';
-import { datastore, find, IModel, Model, search, setDefaultDataStore } from '../index';
-
-interface IUserData extends IModel {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  stuff?: {
-    foo: number;
-  };
-}
+import { datastore, field, find, Model, search, setDefaultDataStore } from '../index';
 
 setDefaultDataStore(memoryDataStore);
 
-class User extends Model<IUserData> {
-  public email?: string;
-  public firstName?: string;
-  public lastName?: string;
-  public stuff?: { foo: number };
+class User extends Model {
+  @field public email?: string;
+  @field public firstName?: string;
+  @field public lastName?: string;
+  @field public stuff?: { foo: number };
 }
 
 @datastore(noOpDataStore)
-class UserNoOp extends Model<IUserData> {
-  public email?: string;
-  public firstName?: string;
-  public lastName?: string;
-  public stuff?: { foo: number };
+class UserNoOp extends Model {
+  @field public email?: string;
+  @field public firstName?: string;
+  @field public lastName?: string;
+  @field public stuff?: { foo: number };
 }
 
 test('save model instance', async () => {

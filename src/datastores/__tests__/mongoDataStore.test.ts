@@ -1,25 +1,15 @@
-import { find, IModel, Model, search, setDefaultDataStore } from '../../index';
+import { field, find, Model, search, setDefaultDataStore } from '../../index';
 import { MongoDataStore } from '../mongoDataStore';
-
-interface ICarData extends IModel {
-  make?: string;
-  model?: string;
-  colour?: string;
-  stuff?: {
-    foo: number;
-    bar: number;
-  };
-}
 
 const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
 
 setDefaultDataStore(mongoDataStore);
 
-class Car extends Model<ICarData> {
-  public make?: string;
-  public model?: string;
-  public colour?: string;
-  public stuff?: {
+class Car extends Model {
+  @field public make?: string;
+  @field public model?: string;
+  @field public colour?: string;
+  @field public stuff?: {
     foo: number;
     bar: number;
   };

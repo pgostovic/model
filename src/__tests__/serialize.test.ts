@@ -1,11 +1,4 @@
-import { fromJS, IModel, Model } from '../index';
-
-interface IUserData extends IModel {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  locations: ILocation[];
-}
+import { field, fromJS, Model } from '../index';
 
 interface ILocation {
   name: string;
@@ -14,11 +7,11 @@ interface ILocation {
   province: string;
 }
 
-class User extends Model<IUserData> {
-  public email?: string;
-  public firstName?: string;
-  public lastName?: string;
-  public locations?: ILocation[];
+class User extends Model {
+  @field public email?: string;
+  @field public firstName?: string;
+  @field public lastName?: string;
+  @field public locations?: ILocation[];
 }
 
 User.register();

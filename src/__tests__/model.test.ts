@@ -1,53 +1,38 @@
 /* tslint:disable max-classes-per-file */
 
-import { classId, fromJS, IModel, Model } from '../index';
+import { classId, field, fromJS, Model } from '../index';
+import { IData, ModelParams } from '../model';
 
-interface IUserData extends IModel {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-}
+class User extends Model {
+  @field public email: string;
+  @field public firstName?: string;
+  @field public lastName?: string;
+  @field public birthdate?: Date;
+  @field public numPets?: number;
+  @field public married?: boolean;
 
-class User extends Model<IUserData> {
-  public email: string;
-  public firstName?: string;
-  public lastName?: string;
-
-  constructor(data: IUserData) {
+  constructor(data: ModelParams<User>) {
     super(data);
-    this.email = data.email;
+    this.email = data.email as string;
   }
 }
 
-interface IWithExplicitClassIdData extends IModel {
-  stuff?: string;
-}
-
 @classId('MyClassId')
-class WithExplicitClassId extends Model<IWithExplicitClassIdData> {
-  public stuff?: string;
+class WithExplicitClassId extends Model {
+  @field public stuff?: string;
 }
 
-interface IWithDefaultData extends IModel {
-  num?: number;
-  isStuff?: boolean;
-}
+class WithDefault extends Model {
+  @field public num?: number;
+  @field public isStuff?: boolean;
 
-class WithDefault extends Model<IWithDefaultData> {
-  public num?: number;
-  public isStuff?: boolean;
-
-  constructor(data: IWithDefaultData) {
+  constructor(data: IData) {
     super({ isStuff: false, ...data });
   }
 }
 
-interface IWithDateData extends IModel {
-  date?: Date;
-}
-
-class WithDate extends Model<IWithDateData> {
-  public date?: Date;
+class WithDate extends Model<WithDate> {
+  @field public date?: Date;
 }
 
 test('new model instance', () => {

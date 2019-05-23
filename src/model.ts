@@ -1,4 +1,5 @@
 import md5 from 'md5';
+import 'reflect-metadata';
 import { dropData, findData, IOptions, IQuery, saveData, searchData } from './datastore';
 
 export type IValue = string | number | boolean | Date | IData | undefined;
@@ -8,6 +9,49 @@ export interface IData {
 }
 
 const modelClassesById = new Map<string, any>();
+const fieldTypesByModel = new Map<any, { [key: string]: FieldType }>();
+
+const enum FieldType {
+  String = 'string',
+  Number = 'number',
+  Date = 'date',
+  Boolean = 'boolean',
+  Object = 'object',
+  Array = 'array',
+}
+
+export function field(model: any, key: string) {
+  const type = Reflect.getMetadata('design:type', model, key);
+
+  let fieldTypes = fieldTypesByModel.get(model.constructor);
+  if (!fieldTypes) {
+    fieldTypes = { ...fieldTypesByModel.get(Model) };
+    fieldTypesByModel.set(model.constructor, fieldTypes);
+  }
+
+  switch (type) {
+    case String:
+      fieldTypes[key] = FieldType.String;
+      break;
+    case Number:
+      fieldTypes[key] = FieldType.Number;
+      break;
+    case Date:
+      fieldTypes[key] = FieldType.Date;
+      break;
+    case Boolean:
+      fieldTypes[key] = FieldType.Boolean;
+      break;
+    case Object:
+      fieldTypes[key] = FieldType.Object;
+      break;
+    case Array:
+      fieldTypes[key] = FieldType.Array;
+      break;
+    default:
+      throw new Error(`Unsupported field type: ${type}`);
+  }
+}
 
 export const fromJS = <T>(js: IData): T => {
   const cid = js._cid_ as string;
@@ -32,12 +76,9 @@ const getClassId = (modelClass: any): string => {
   return modelClass.cid || md5(modelClass.name);
 };
 
-// TODO: restrict values to IValue type
-export interface IModel {
-  id?: string;
-}
+export type ModelParams<T> = { [K in Exclude<keyof T, Exclude<keyof Model, 'id'>>]?: T[K] };
 
-export abstract class Model<T extends IModel> {
+export abstract class Model<T = IData> {
   public static register() {
     modelClassesById.set(getClassId(this), this);
   }
@@ -46,15 +87,19 @@ export abstract class Model<T extends IModel> {
     return dropData(this);
   }
 
-  public id?: string;
+  public static getFieldTypes() {
+    return fieldTypesByModel.get(this);
+  }
 
-  constructor(data: T) {
-    const fieldNames = Object.keys(data) as Array<keyof T>;
+  @field public id?: string;
+
+  constructor(data: ModelParams<T>) {
+    const fieldNames = Object.keys((this.constructor as any).getFieldTypes());
 
     for (const fieldName of fieldNames) {
       Object.defineProperty(this, fieldName, {
         enumerable: true,
-        value: data[fieldName],
+        value: (data as IData)[fieldName],
         writable: true,
       });
     }
@@ -65,13 +110,13 @@ export abstract class Model<T extends IModel> {
     return this;
   }
 
-  public async save(): Promise<T> {
+  public async save(): Promise<this> {
     const id = await saveData(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
       return new (this.constructor as any)({ ...this.getData(), id });
     }
     this.id = id;
-    return (this as any) as T;
+    return this;
   }
 
   public toJS(): IData {
