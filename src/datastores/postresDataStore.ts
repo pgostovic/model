@@ -14,18 +14,22 @@ export class PostgresDataStore implements IDataStore {
   }
 
   public async save(modelName: string, data: IData): Promise<string> {
+    log('save', modelName, data, this.getClient());
     throw new Error('Not yet');
   }
 
   public async find(modelName: string, id: string): Promise<IData | undefined> {
+    log('find', modelName, id);
     throw new Error('Not yet');
   }
 
   public async search(modelName: string, query: IQuery, options: IOptions): Promise<IData[]> {
+    log('search', modelName, query, options);
     throw new Error('Not yet');
   }
 
   public async drop(modelName: string): Promise<boolean> {
+    log('drop', modelName);
     throw new Error('Not yet');
   }
 
