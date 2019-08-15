@@ -1,5 +1,5 @@
 import { createLogger } from '@phnq/log';
-import { Client } from 'pg';
+// import { Client } from 'pg';
 import { DataStore, IOptions, IQuery } from '../datastore';
 import { Data, ModelId } from '../model';
 
@@ -7,7 +7,7 @@ const log = createLogger('postgresDataStore');
 
 export class PostgresDataStore implements DataStore {
   private connUrl: string;
-  private client?: Client;
+  // private client?: Client;
 
   constructor(connUrl: string) {
     this.connUrl = connUrl;
@@ -15,7 +15,7 @@ export class PostgresDataStore implements DataStore {
   }
 
   public async save(modelName: string, data: Data): Promise<ModelId> {
-    log('save', modelName, data, this.getClient());
+    log('save', modelName, data);
     throw new Error('Not yet');
   }
 
@@ -35,16 +35,16 @@ export class PostgresDataStore implements DataStore {
   }
 
   public async close(): Promise<void> {
-    if (this.client) {
-      await this.client.end();
-    }
+    // if (this.client) {
+    //   await this.client.end();
+    // }
   }
 
-  private async getClient(): Promise<Client> {
-    if (!this.client) {
-      this.client = new Client();
-      await this.client.connect();
-    }
-    return this.client;
-  }
+  // private async getClient(): Promise<Client> {
+  //   if (!this.client) {
+  //     this.client = new Client();
+  //     await this.client.connect();
+  //   }
+  //   return this.client;
+  // }
 }

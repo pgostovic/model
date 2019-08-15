@@ -1,5 +1,5 @@
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
-import { memoryDataStore } from '../memoryDataStore';
+import { memoryDataStore, logCollections } from '../memoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
 
@@ -15,6 +15,8 @@ class Car extends Model {
 
 beforeEach(async () => {
   await Car.drop();
+
+  logCollections();
 });
 
 test('Saved model gets id', async () => {
@@ -54,6 +56,9 @@ test('Search by attribute', async () => {
 
   const blackCars = await search(Car, { colour: 'Black' });
   expect(blackCars.length).toBe(2);
+
+  const noCars = await search(Car, { colour: 'Black', bubba: [1, 2, 3] });
+  expect(noCars.length).toBe(0);
 });
 
 test('Search by sub-attribute', async () => {
