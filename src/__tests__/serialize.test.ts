@@ -1,6 +1,6 @@
 import { field, fromJS, Model } from '../index';
 
-interface ILocation {
+interface Location {
   name: string;
   street: string;
   city: string;
@@ -11,7 +11,7 @@ class User extends Model {
   @field public email?: string;
   @field public firstName?: string;
   @field public lastName?: string;
-  @field public locations?: ILocation[];
+  @field public locations?: Location[];
 }
 
 User.register();

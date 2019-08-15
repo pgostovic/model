@@ -1,14 +1,14 @@
 import { createLogger } from '@phnq/log';
-import { IDataStore, IQuery } from '../datastore';
-import { IData, IValue } from '../model';
+import { DataStore, IQuery } from '../datastore';
+import { Data, Value, ModelId } from '../model';
 
 const log = createLogger('memoryDataStore');
 
-export type IMemoryDataStoreQuery = IQuery & IData;
+export type IMemoryDataStoreQuery = IQuery & Data;
 
-const collections = new Map<string, IData[]>();
+const collections = new Map<string, Data[]>();
 
-const getCollection = (name: string): IData[] => collections.get(name) || [];
+const getCollection = (name: string): Data[] => collections.get(name) || [];
 
 const dataId = (function* messageIdGen() {
   let i = 0;
@@ -18,51 +18,8 @@ const dataId = (function* messageIdGen() {
   }
 })();
 
-export const memoryDataStore: IDataStore = {
-  save: async (modelName: string, data: IData): Promise<string> => {
-    const id = (data.id as string) || dataId.next().value;
-    const records = getCollection(modelName).filter(record => record.id !== id);
-    const newRecord = { ...data, id };
-    collections.set(modelName, [...records, newRecord]);
-    log(`SAVE - ${modelName}(${id})`);
-    return id;
-  },
-
-  find: async (modelName: string, id: string): Promise<IData | undefined> => {
-    const record = getCollection(modelName).find(r => r.id === id);
-    log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);
-    return record;
-  },
-
-  search: async (modelName: string, query: IMemoryDataStoreQuery): Promise<IData[]> => {
-    const records = getCollection(modelName).filter(record => match(query, record));
-    log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
-    return records;
-  },
-
-  drop: async (modelName: string): Promise<boolean> => {
-    collections.set(modelName, []);
-    return true;
-  },
-
-  // tslint:disable-next-line: no-empty
-  close: async () => {},
-};
-
-const match = (query: IMemoryDataStoreQuery, record: IData): boolean => {
-  let isMatch = true;
-  Object.keys(query).forEach(k => {
-    if (k.match(/\./)) {
-      isMatch = isMatch && deepMatch(formatDotQuery(k, query[k]), record, false);
-    } else {
-      isMatch = isMatch && deepMatch({ [k]: query[k] }, record, true);
-    }
-  });
-  return isMatch;
-};
-
-const formatDotQuery = (dotQuery: string, value: IValue): IData => {
-  const formattedQuery: IData = {};
+const formatDotQuery = (dotQuery: string, value: Value): Data => {
+  const formattedQuery: Data = {};
   let q = formattedQuery;
   const comps = dotQuery.split('.');
   const last = comps.splice(-1)[0];
@@ -73,7 +30,7 @@ const formatDotQuery = (dotQuery: string, value: IValue): IData => {
   return formattedQuery;
 };
 
-const deepMatch = (query: IValue, data: IValue, matchAll: boolean): boolean => {
+const deepMatch = (query: Value, data: Value, matchAll: boolean): boolean => {
   if (query instanceof Array && data instanceof Array) {
     if (matchAll) {
       return !query.find((item, i) => !deepMatch(item, data[i], matchAll));
@@ -90,6 +47,49 @@ const deepMatch = (query: IValue, data: IValue, matchAll: boolean): boolean => {
   return query === data;
 };
 
-export const logCollections = () => {
+const match = (query: IMemoryDataStoreQuery, record: Data): boolean => {
+  let isMatch = true;
+  Object.keys(query).forEach(k => {
+    if (k.match(/\./)) {
+      isMatch = isMatch && deepMatch(formatDotQuery(k, query[k]), record, false);
+    } else {
+      isMatch = isMatch && deepMatch({ [k]: query[k] }, record, true);
+    }
+  });
+  return isMatch;
+};
+
+export const logCollections = (): void => {
   log('COLLECTIONS: ', collections);
+};
+
+export const memoryDataStore: DataStore = {
+  save: async (modelName: string, data: Data): Promise<ModelId> => {
+    const id = (data.id as string) || dataId.next().value;
+    const records = getCollection(modelName).filter(record => record.id !== id);
+    const newRecord = { ...data, id };
+    collections.set(modelName, [...records, newRecord]);
+    log(`SAVE - ${modelName}(${id})`);
+    return id;
+  },
+
+  find: async (modelName: string, id: ModelId): Promise<Data | undefined> => {
+    const record = getCollection(modelName).find(r => r.id === id);
+    log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);
+    return record;
+  },
+
+  search: async (modelName: string, query: IMemoryDataStoreQuery): Promise<Data[]> => {
+    const records = getCollection(modelName).filter(record => match(query, record));
+    log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
+    return records;
+  },
+
+  drop: async (modelName: string): Promise<boolean> => {
+    collections.set(modelName, []);
+    return true;
+  },
+
+  // tslint:disable-next-line: no-empty
+  close: async () => {},
 };

@@ -1,16 +1,16 @@
-import { IDataStore, IQuery } from '../datastore';
-import { IData } from '../model';
+import { DataStore, IQuery } from '../datastore';
+import { Data, ModelId } from '../model';
 
-export const noOpDataStore: IDataStore = {
-  save: async (modelName: string, data: IData): Promise<string> => {
+export const noOpDataStore: DataStore = {
+  save: async (modelName: string, data: Data): Promise<ModelId> => {
     throw new Error(`Operation not permitted in this context: save / ${modelName} / ${data}`);
   },
 
-  find: async (modelName: string, id: string): Promise<IData | undefined> => {
+  find: async (modelName: string, id: ModelId): Promise<Data | undefined> => {
     throw new Error(`Operation not permitted in this context: find / ${modelName} / ${id}`);
   },
 
-  search: async (modelName: string, query: IQuery): Promise<IData[]> => {
+  search: async (modelName: string, query: IQuery): Promise<Data[]> => {
     throw new Error(`Operation not permitted in this context: search / ${modelName} / ${query}`);
   },
 

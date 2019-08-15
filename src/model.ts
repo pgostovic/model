@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import md5 from 'md5';
 import 'reflect-metadata';
 import { dropData, findData, IOptions, IQuery, saveData, searchData } from './datastore';
 
-export type IValue = string | number | boolean | Date | IData | undefined;
+export type Value = string | number | boolean | Date | Data | undefined;
 
-export interface IData {
-  [key: string]: IValue | IValue[];
+export interface Data {
+  [key: string]: Value | Value[];
 }
 
 const modelClassesById = new Map<string, any>();
-const fieldTypesByModel = new Map<any, { [key: string]: FieldType }>();
+const fieldTypesByModel = new Map<any, FieldTypes>();
 
 const enum FieldType {
   String = 'string',
@@ -20,7 +21,9 @@ const enum FieldType {
   Array = 'array',
 }
 
-export function field(model: any, key: string) {
+type FieldTypes = { [key: string]: FieldType };
+
+export function field(model: Model, key: string): void {
   const type = Reflect.getMetadata('design:type', model, key);
 
   let fieldTypes = fieldTypesByModel.get(model.constructor);
@@ -53,11 +56,11 @@ export function field(model: any, key: string) {
   }
 }
 
-export const fromJS = <T>(js: IData): T => {
+export const fromJS = <T>(js: Data): T => {
   const cid = js._cid_ as string;
   const modelClass = modelClassesById.get(cid);
   if (modelClass) {
-    const data: IData = {};
+    const data: Data = {};
     Object.keys(js)
       .filter(k => k !== '_cid_')
       .forEach(k => {
@@ -68,7 +71,7 @@ export const fromJS = <T>(js: IData): T => {
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const classId = (cid: string): any => (modelClass: any) => {
+export const classId = (cid: string): any => (modelClass: ModelClass) => {
   modelClass.cid = cid;
 };
 
@@ -78,20 +81,24 @@ const getClassId = (modelClass: any): string => {
 
 export type ModelParams<T> = { [K in Exclude<keyof T, Exclude<keyof Model, 'id'>>]?: T[K] };
 
-export abstract class Model<T = IData> {
-  public static register() {
+export type ModelId = string;
+
+type ModelClass = { new (): Model; cid: string };
+
+export abstract class Model<T = Data> {
+  public static register(): void {
     modelClassesById.set(getClassId(this), this);
   }
 
-  public static drop() {
+  public static drop(): Promise<boolean> {
     return dropData(this);
   }
 
-  public static getFieldTypes() {
+  public static getFieldTypes(): FieldTypes | undefined {
     return fieldTypesByModel.get(this);
   }
 
-  @field public id?: string;
+  @field public id?: ModelId;
 
   constructor(data: ModelParams<T>) {
     const fieldNames = Object.keys((this.constructor as any).getFieldTypes());
@@ -99,13 +106,13 @@ export abstract class Model<T = IData> {
     for (const fieldName of fieldNames) {
       Object.defineProperty(this, fieldName, {
         enumerable: true,
-        value: (data as IData)[fieldName],
+        value: (data as Data)[fieldName],
         writable: true,
       });
     }
   }
 
-  public freeze() {
+  public freeze(): this {
     Object.freeze(this);
     return this;
   }
@@ -119,15 +126,15 @@ export abstract class Model<T = IData> {
     return this;
   }
 
-  public toJS(): IData {
+  public toJS(): Data {
     return {
       ...JSON.parse(JSON.stringify(this.getData())),
       _cid_: getClassId(this.constructor),
     };
   }
 
-  private getData(): IData {
-    const data: IData = {};
+  private getData(): Data {
+    const data: Data = {};
     Object.keys(this).forEach((key: string) => {
       data[key] = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
     });
@@ -135,7 +142,7 @@ export abstract class Model<T = IData> {
   }
 }
 
-export const find = async <T>(c: new (...args: any[]) => T, id?: string): Promise<T | undefined> => {
+export const find = async <T>(c: new (...args: any[]) => T, id?: ModelId): Promise<T | undefined> => {
   if (id) {
     const data = await findData(c, id);
     if (data) {

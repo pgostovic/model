@@ -1,7 +1,7 @@
 /* tslint:disable max-classes-per-file */
 
 import { classId, field, fromJS, Model } from '../index';
-import { IData, ModelParams } from '../model';
+import { Data, ModelParams } from '../model';
 
 class User extends Model {
   @field public email: string;
@@ -26,7 +26,7 @@ class WithDefault extends Model {
   @field public num?: number;
   @field public isStuff?: boolean;
 
-  constructor(data: IData) {
+  constructor(data: Data) {
     super({ isStuff: false, ...data });
   }
 }
