@@ -12,6 +12,8 @@ export interface Data {
   [key: string]: Value | Value[];
 }
 
+type HasId = { id: string };
+
 const modelClassesById = new Map<string, typeof Model>();
 const fieldNamesByModel = new Map<Function, string[]>();
 
@@ -43,15 +45,15 @@ export class Model {
 
   @field public id?: ModelId;
 
-  public async save(): Promise<this> {
+  public async save(): Promise<this & HasId> {
     const id = await saveData(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
-      return clone;
+      return clone as this & HasId;
     }
     this.id = id;
-    return this;
+    return this as this & HasId;
   }
 
   private getData(): Data {
@@ -100,13 +102,16 @@ export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const find = async <T extends Model>(c: new (...args: any[]) => T, id: ModelId): Promise<T | undefined> => {
+export const find = async <T extends Model>(
+  c: new (...args: any[]) => T,
+  id: ModelId,
+): Promise<T & HasId | undefined> => {
   const data = await findData(c, id);
   if (data) {
     const model = new Model();
     Object.assign(model, data);
     Object.setPrototypeOf(model, c.prototype);
-    return (model as unknown) as T;
+    return (model as unknown) as T & HasId;
   }
 };
 
@@ -114,4 +119,4 @@ export const search = async <T extends Model>(
   c: new (...args: any[]) => T,
   query: Query,
   options: Options = undefined,
-): Promise<T[]> => (await searchData(c, query, options)).map(data => new c(data));
+): Promise<(T & HasId)[]> => (await searchData(c, query, options)).map(data => new c(data) as T & HasId);
