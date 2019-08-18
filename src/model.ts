@@ -100,7 +100,7 @@ export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const find = async <T>(c: new (...args: any[]) => T, id: ModelId): Promise<T | undefined> => {
+export const find = async <T extends Model>(c: new (...args: any[]) => T, id: ModelId): Promise<T | undefined> => {
   const data = await findData(c, id);
   if (data) {
     const model = new Model();
@@ -110,7 +110,7 @@ export const find = async <T>(c: new (...args: any[]) => T, id: ModelId): Promis
   }
 };
 
-export const search = async <T>(
+export const search = async <T extends Model>(
   c: new (...args: any[]) => T,
   query: Query,
   options: Options = undefined,

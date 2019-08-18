@@ -1,5 +1,5 @@
 import { noOpDataStore } from './datastores/noOpDataStore';
-import { Data, ModelId } from './model';
+import { Data, ModelId, Model } from './model';
 
 export type Query = any;
 export type Options = any;
@@ -12,7 +12,7 @@ export interface DataStore {
   close(): Promise<void>;
 }
 
-const dataStoresByModel = new Map<any, DataStore>();
+const dataStoresByModel = new Map<typeof Model, DataStore>();
 
 // Decorator to mark a model's datastore
 export const datastore = (ds: DataStore, collectionName?: string) => (modelClass: any) => {
