@@ -8,10 +8,17 @@ interface Location {
 }
 
 class User extends Model {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
-  @field public locations?: Location[];
+  @field public email: string;
+  @field public firstName: string;
+  @field public lastName: string;
+  @field public locations: Location[] = [];
+
+  constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
+    super();
+    this.email = email;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
 }
 
 User.register();
@@ -21,20 +28,20 @@ test('serialize/deserialize', () => {
     email: 'bubba@gump.com',
     firstName: 'Bubba',
     lastName: 'Gump',
-    locations: [
-      {
-        name: 'home',
-        street: '123 Orchard Ave.',
-        city: 'Toronto',
-        province: 'Ontario',
-      },
-      {
-        name: 'work',
-        street: '555 Main St.',
-        city: 'Toronto',
-        province: 'Ontario',
-      },
-    ],
+  });
+
+  user.locations.push({
+    name: 'home',
+    street: '123 Orchard Ave.',
+    city: 'Toronto',
+    province: 'Ontario',
+  });
+
+  user.locations.push({
+    name: 'work',
+    street: '555 Main St.',
+    city: 'Toronto',
+    province: 'Ontario',
   });
 
   const userJS = user.toJS();

@@ -4,13 +4,20 @@ import { memoryDataStore, logCollections } from '../memoryDataStore';
 setDefaultDataStore(memoryDataStore);
 
 class Car extends Model {
-  @field public make?: string;
-  @field public model?: string;
-  @field public colour?: string;
+  @field public make: string;
+  @field public model: string;
+  @field public colour: string;
   @field public stuff?: {
     foo: number;
     bar: number;
   };
+
+  constructor({ make, model, colour }: { make: string; model: string; colour: string }) {
+    super();
+    this.make = make;
+    this.model = model;
+    this.colour = colour;
+  }
 }
 
 beforeEach(async () => {
@@ -29,6 +36,11 @@ test('Saved model gets id', async () => {
 test('Retrieve by id, update', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   const savedCar = await car.save();
+  if (!savedCar.id) {
+    fail('Id not assigned on save');
+    return;
+  }
+
   const foundCar = await find(Car, savedCar.id);
   if (foundCar) {
     expect(foundCar.id).toBe(savedCar.id);
@@ -66,8 +78,8 @@ test('Search by sub-attribute', async () => {
     make: 'Volvo',
     model: 'XC-90',
     colour: 'Willow',
-    stuff: { foo: 42, bar: 43 },
   });
+  car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
   const results = await search(Car, { stuff: { foo: 42, bar: 43 } });
@@ -79,8 +91,8 @@ test('Search by sub-attribute, dot notation', async () => {
     make: 'Volvo',
     model: 'XC-90',
     colour: 'Willow',
-    stuff: { foo: 42, bar: 43 },
   });
+  car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
   const results = await search(Car, { 'stuff.foo': 42 });

@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+
 import md5 from 'md5';
-import 'reflect-metadata';
-import { dropData, findData, IOptions, IQuery, saveData, searchData } from './datastore';
+import cloneDeep from 'lodash.clonedeep';
+import { findData, searchData, Query, Options, saveData, dropData } from './datastore';
+
+export type ModelId = string;
 
 export type Value = string | number | boolean | Date | Data | undefined;
 
@@ -9,83 +12,27 @@ export interface Data {
   [key: string]: Value | Value[];
 }
 
-const modelClassesById = new Map<string, any>();
-const fieldTypesByModel = new Map<any, FieldTypes>();
+const modelClassesById = new Map<string, typeof Model>();
+const fieldNamesByModel = new Map<Function, string[]>();
 
-const enum FieldType {
-  String = 'string',
-  Number = 'number',
-  Date = 'date',
-  Boolean = 'boolean',
-  Object = 'object',
-  Array = 'array',
-}
+export const field = (model: Model, key: string): void => {
+  const modelCls = model.constructor;
 
-type FieldTypes = { [key: string]: FieldType };
-
-export function field(model: Model, key: string): void {
-  const type = Reflect.getMetadata('design:type', model, key);
-
-  let fieldTypes = fieldTypesByModel.get(model.constructor);
-  if (!fieldTypes) {
-    fieldTypes = { ...fieldTypesByModel.get(Model) };
-    fieldTypesByModel.set(model.constructor, fieldTypes);
-  }
-
-  switch (type) {
-    case String:
-      fieldTypes[key] = FieldType.String;
-      break;
-    case Number:
-      fieldTypes[key] = FieldType.Number;
-      break;
-    case Date:
-      fieldTypes[key] = FieldType.Date;
-      break;
-    case Boolean:
-      fieldTypes[key] = FieldType.Boolean;
-      break;
-    case Object:
-      fieldTypes[key] = FieldType.Object;
-      break;
-    case Array:
-      fieldTypes[key] = FieldType.Array;
-      break;
-    default:
-      throw new Error(`Unsupported field type: ${type}`);
-  }
-}
-
-export const fromJS = <T>(js: Data): T => {
-  const cid = js._cid_ as string;
-  const modelClass = modelClassesById.get(cid);
-  if (modelClass) {
-    const data: Data = {};
-    Object.keys(js)
-      .filter(k => k !== '_cid_')
-      .forEach(k => {
-        data[k] = js[k];
-      });
-    return new modelClass(data);
-  }
-  throw new Error(`No model class registered for id: ${cid}`);
+  const fieldNames = fieldNamesByModel.get(modelCls) || ['id'];
+  fieldNames.push(key);
+  fieldNamesByModel.set(modelCls, fieldNames);
 };
 
-export const classId = (cid: string): any => (modelClass: ModelClass) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const classId = (cid: string): any => (modelClass: { cid?: string }) => {
   modelClass.cid = cid;
 };
 
-const getClassId = (modelClass: any): string => {
+const getClassId = (modelClass: { cid?: string; name: string }): string => {
   return modelClass.cid || md5(modelClass.name);
 };
 
-export type ModelParams<T> = { [K in Exclude<keyof T, Exclude<keyof Model, 'id'>>]?: T[K] };
-
-export type ModelId = string;
-
-type ModelClass = { new (): Model; cid: string };
-
-export abstract class Model<T = Data> {
+export class Model {
   public static register(): void {
     modelClassesById.set(getClassId(this), this);
   }
@@ -94,66 +41,77 @@ export abstract class Model<T = Data> {
     return dropData(this);
   }
 
-  public static getFieldTypes(): FieldTypes | undefined {
-    return fieldTypesByModel.get(this);
-  }
-
   @field public id?: ModelId;
-
-  constructor(data: ModelParams<T>) {
-    const fieldNames = Object.keys((this.constructor as any).getFieldTypes());
-
-    for (const fieldName of fieldNames) {
-      Object.defineProperty(this, fieldName, {
-        enumerable: true,
-        value: (data as Data)[fieldName],
-        writable: true,
-      });
-    }
-  }
-
-  public freeze(): this {
-    Object.freeze(this);
-    return this;
-  }
 
   public async save(): Promise<this> {
     const id = await saveData(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
-      return new (this.constructor as any)({ ...this.getData(), id });
+      const clone = this.clone();
+      clone.id = id;
+      return clone;
     }
     this.id = id;
     return this;
   }
 
-  public toJS(): Data {
-    return {
-      ...JSON.parse(JSON.stringify(this.getData())),
-      _cid_: getClassId(this.constructor),
-    };
-  }
-
   private getData(): Data {
+    const fieldNames = fieldNamesByModel.get(this.constructor) || [];
     const data: Data = {};
-    Object.keys(this).forEach((key: string) => {
+    fieldNames.forEach((key: string) => {
       data[key] = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
     });
     return data;
   }
+
+  public toJS(): Data {
+    return Object.freeze({
+      ...this.clone().getData(),
+      _cid_: getClassId(this.constructor),
+    });
+  }
+
+  public clone(): this {
+    const model = new Model();
+    Object.assign(model, cloneDeep(this.getData()));
+    Object.setPrototypeOf(model, this.constructor.prototype);
+    return (model as unknown) as this;
+  }
+
+  public freeze(): this {
+    return Object.freeze(this);
+  }
 }
 
-export const find = async <T>(c: new (...args: any[]) => T, id?: ModelId): Promise<T | undefined> => {
-  if (id) {
-    const data = await findData(c, id);
-    if (data) {
-      return new c(data);
-    }
+export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
+  const cid = js._cid_ as string;
+  const modelClass = mClass || modelClassesById.get(cid);
+  if (modelClass) {
+    const data: Data = {};
+    const fieldNames = fieldNamesByModel.get(modelClass) || [];
+    fieldNames.forEach(name => {
+      data[name] = js[name];
+    });
+
+    const model = new Model();
+    Object.assign(model, data);
+    Object.setPrototypeOf(model, modelClass.prototype);
+    return (model as unknown) as T;
   }
-  return undefined;
+  throw new Error(`No model class registered for id: ${cid}`);
+};
+
+export const find = async <T>(c: new (...args: any[]) => T, id: ModelId): Promise<T | undefined> => {
+  const data = await findData(c, id);
+  if (data) {
+    const model = new Model();
+    Object.assign(model, data);
+    Object.setPrototypeOf(model, c.prototype);
+    return (model as unknown) as T;
+  }
 };
 
 export const search = async <T>(
   c: new (...args: any[]) => T,
-  query: IQuery,
-  options: IOptions = undefined,
+  query: Query,
+  options: Options = undefined,
 ): Promise<T[]> => (await searchData(c, query, options)).map(data => new c(data));

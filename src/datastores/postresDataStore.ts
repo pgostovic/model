@@ -1,6 +1,6 @@
 import { createLogger } from '@phnq/log';
 // import { Client } from 'pg';
-import { DataStore, IOptions, IQuery } from '../datastore';
+import { DataStore, Options, Query } from '../datastore';
 import { Data, ModelId } from '../model';
 
 const log = createLogger('postgresDataStore');
@@ -24,7 +24,7 @@ export class PostgresDataStore implements DataStore {
     throw new Error('Not yet');
   }
 
-  public async search(modelName: string, query: IQuery, options: IOptions): Promise<Data[]> {
+  public async search(modelName: string, query: Query, options: Options): Promise<Data[]> {
     log('search', modelName, query, options);
     throw new Error('Not yet');
   }

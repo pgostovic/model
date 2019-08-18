@@ -1,10 +1,10 @@
 import { createLogger } from '@phnq/log';
-import { DataStore, IQuery } from '../datastore';
+import { DataStore, Query } from '../datastore';
 import { Data, Value, ModelId } from '../model';
 
 const log = createLogger('memoryDataStore');
 
-export type IMemoryDataStoreQuery = IQuery & Data;
+export type IMemoryDataStoreQuery = Query & Data;
 
 const collections = new Map<string, Data[]>();
 

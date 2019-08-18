@@ -1,6 +1,6 @@
 import { createLogger } from '@phnq/log';
 import mongodb from 'mongodb';
-import { DataStore, IOptions, IQuery } from '../datastore';
+import { DataStore, Options, Query } from '../datastore';
 import { Data, ModelId } from '../model';
 
 const log = createLogger('mongoDataStore');
@@ -57,7 +57,7 @@ export class MongoDataStore implements DataStore {
     }
   }
 
-  public async search(modelName: string, query: IQuery, options: IOptions): Promise<Data[]> {
+  public async search(modelName: string, query: Query, options: Options): Promise<Data[]> {
     const col = await this.collection(modelName);
 
     const results: Data[] = [];

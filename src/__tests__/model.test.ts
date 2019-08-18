@@ -1,7 +1,6 @@
 /* tslint:disable max-classes-per-file */
 
-import { classId, field, fromJS, Model } from '../index';
-import { Data, ModelParams } from '../model';
+import { classId, field, fromJS, Model } from '../model';
 
 class User extends Model {
   @field public email: string;
@@ -10,10 +9,11 @@ class User extends Model {
   @field public birthdate?: Date;
   @field public numPets?: number;
   @field public married?: boolean;
+  @field public stuff = { num: 42 };
 
-  constructor(data: ModelParams<User>) {
-    super(data);
-    this.email = data.email as string;
+  constructor({ email }: { email: string }) {
+    super();
+    this.email = email;
   }
 }
 
@@ -22,25 +22,21 @@ class WithExplicitClassId extends Model {
   @field public stuff?: string;
 }
 
-class WithDefault extends Model {
-  @field public num?: number;
-  @field public isStuff?: boolean;
-
-  constructor(data: Data) {
-    super({ isStuff: false, ...data });
-  }
+class WithDefaults extends Model {
+  @field public num = 42;
+  @field public isStuff = true;
 }
 
-class WithDate extends Model<WithDate> {
+class WithDate extends Model {
   @field public date?: Date;
 }
 
 test('new model instance', () => {
   const user = new User({
     email: 'user@test.com',
-    firstName: 'Bubba',
-    lastName: 'Gump',
   });
+  user.firstName = 'Bubba';
+  user.lastName = 'Gump';
 
   expect(user.email).toBe('user@test.com');
   expect(user.firstName).toBe('Bubba');
@@ -50,8 +46,6 @@ test('new model instance', () => {
 test('may not mutate a frozen model instance', () => {
   const user = new User({
     email: 'user@test.com',
-    firstName: 'Bubba',
-    lastName: 'Gump',
   }).freeze();
 
   expect(() => {
@@ -62,8 +56,6 @@ test('may not mutate a frozen model instance', () => {
 test('may mutate instance of model', () => {
   const user = new User({
     email: 'user@test.com',
-    firstName: 'Bubba',
-    lastName: 'Gump',
   });
 
   expect(() => {
@@ -74,49 +66,41 @@ test('may mutate instance of model', () => {
   }).not.toThrow();
 });
 
-test('copy model instance', () => {
+test('clone model instance', () => {
   const user = new User({
     email: 'user@test.com',
-    firstName: 'Bubba',
-    id: 'abcd1234',
-    lastName: 'Gump',
   });
+  user.firstName = 'Bubba';
+  user.lastName = 'Gump';
 
-  const userCopy = new User({ ...user });
+  const userClone = user.clone();
 
-  expect(userCopy.email).toBe('user@test.com');
-  expect(userCopy.firstName).toBe('Bubba');
-  expect(userCopy.lastName).toBe('Gump');
+  expect(userClone.email).toBe('user@test.com');
+  expect(userClone.firstName).toBe('Bubba');
+  expect(userClone.lastName).toBe('Gump');
 });
 
-test('copy model instance, change field', () => {
+test('clone model instance, change field', () => {
   const user = new User({
     email: 'user@test.com',
-    firstName: 'Bubba',
-    lastName: 'Gump',
   });
+  user.firstName = 'Bubba';
+  user.lastName = 'Gump';
 
-  const userCopy = new User({ ...user, email: 'user2@test.com' });
+  const userClone = user.clone();
+  userClone.email = 'user2@test.com';
+  userClone.stuff.num = 43;
 
-  expect(userCopy.email).toBe('user2@test.com');
-  expect(userCopy.firstName).toBe('Bubba');
-  expect(userCopy.lastName).toBe('Gump');
+  expect(user.email).toBe('user@test.com');
+  expect(user.stuff.num).toBe(42);
+  expect(userClone.stuff.num).toBe(43);
+  expect(userClone.email).toBe('user2@test.com');
+  expect(userClone.firstName).toBe('Bubba');
+  expect(userClone.lastName).toBe('Gump');
 });
 
 test('default field value', () => {
-  const w = new WithDefault({
-    num: 42,
-  });
-
-  expect(w.num).toBe(42);
-  expect(w.isStuff).toBe(false);
-});
-
-test('default field value overridden', () => {
-  const w = new WithDefault({
-    num: 42,
-    isStuff: true,
-  });
+  const w = new WithDefaults();
 
   expect(w.num).toBe(42);
   expect(w.isStuff).toBe(true);
@@ -125,9 +109,8 @@ test('default field value overridden', () => {
 test('with date field', () => {
   const date = new Date();
 
-  const w = new WithDate({
-    date,
-  });
+  const w = new WithDate();
+  w.date = date;
 
   expect(w.date).toBe(date);
 });
@@ -139,7 +122,7 @@ test('fromJS with non-existent class id', () => {
 });
 
 test('Explicit class Id', () => {
-  const obj = new WithExplicitClassId({ stuff: 'yo' });
+  const obj = new WithExplicitClassId();
 
   expect(obj.toJS()._cid_).toBe('MyClassId');
 });

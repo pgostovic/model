@@ -6,18 +6,32 @@ import { datastore, field, find, Model, search, setDefaultDataStore } from '../i
 setDefaultDataStore(memoryDataStore);
 
 class User extends Model {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
+  @field public email: string;
+  @field public firstName: string;
+  @field public lastName: string;
   @field public stuff?: { foo: number };
+
+  constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
+    super();
+    this.email = email;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
 }
 
 @datastore(noOpDataStore)
 class UserNoOp extends Model {
-  @field public email?: string;
-  @field public firstName?: string;
-  @field public lastName?: string;
+  @field public email: string;
+  @field public firstName: string;
+  @field public lastName: string;
   @field public stuff?: { foo: number };
+
+  constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
+    super();
+    this.email = email;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
 }
 
 test('save model instance', async () => {
@@ -132,10 +146,8 @@ test('deep search', async () => {
     email: 'bubba@cheese.com',
     firstName: 'Bubba',
     lastName: 'Cheese',
-    stuff: {
-      foo: 42,
-    },
   });
+  bubba.stuff = { foo: 42 };
   await bubba.save();
 
   const bubba42s = await search(User, {
@@ -150,7 +162,7 @@ test('deep search', async () => {
 });
 
 test('datastore decorator', async () => {
-  const noSave = new UserNoOp({ firstName: 'No', lastName: 'Save' });
+  const noSave = new UserNoOp({ email: 'user@test.com', firstName: 'No', lastName: 'Save' });
   try {
     await noSave.save();
     fail('Should have thrown');

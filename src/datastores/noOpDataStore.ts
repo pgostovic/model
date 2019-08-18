@@ -1,4 +1,4 @@
-import { DataStore, IQuery } from '../datastore';
+import { DataStore, Query } from '../datastore';
 import { Data, ModelId } from '../model';
 
 export const noOpDataStore: DataStore = {
@@ -10,7 +10,7 @@ export const noOpDataStore: DataStore = {
     throw new Error(`Operation not permitted in this context: find / ${modelName} / ${id}`);
   },
 
-  search: async (modelName: string, query: IQuery): Promise<Data[]> => {
+  search: async (modelName: string, query: Query): Promise<Data[]> => {
     throw new Error(`Operation not permitted in this context: search / ${modelName} / ${query}`);
   },
 

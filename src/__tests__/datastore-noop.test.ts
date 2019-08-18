@@ -4,6 +4,13 @@ class User extends Model {
   @field public email?: string;
   @field public firstName?: string;
   @field public lastName?: string;
+
+  constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
+    super();
+    this.email = email;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
 }
 
 test('save model instance throws on client', async () => {

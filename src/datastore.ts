@@ -1,13 +1,13 @@
 import { noOpDataStore } from './datastores/noOpDataStore';
 import { Data, ModelId } from './model';
 
-export type IQuery = any;
-export type IOptions = any;
+export type Query = any;
+export type Options = any;
 
 export interface DataStore {
   save(modelName: string, data: Data): Promise<ModelId>;
   find(modelName: string, id: ModelId): Promise<Data | undefined>;
-  search(modelName: string, query: IQuery, options: IOptions): Promise<Data[]>;
+  search(modelName: string, query: Query, options: Options): Promise<Data[]>;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
 }
@@ -40,7 +40,7 @@ export const saveData = (modelClass: any, data: Data): Promise<ModelId> =>
 export const findData = (modelClass: any, id: ModelId): Promise<Data | undefined> =>
   getDataStore(modelClass).find(modelClass.collectionName || modelClass.name, id);
 
-export const searchData = (modelClass: any, query: IQuery, options: IOptions): Promise<Data[]> =>
+export const searchData = (modelClass: any, query: Query, options: Options): Promise<Data[]> =>
   getDataStore(modelClass).search(modelClass.collectionName || modelClass.name, query, options);
 
 export const dropData = (modelClass: any): Promise<boolean> =>
