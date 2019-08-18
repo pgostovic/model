@@ -1,6 +1,6 @@
 {
   "name": "@phnq/model",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Data access.",
   "main": "index.js",
   "scripts": {
