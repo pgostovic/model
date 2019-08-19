@@ -1,5 +1,12 @@
 import { field, fromJS, Model } from '../index';
 
+const idIterator = (function*(): IterableIterator<number> {
+  let i = 0;
+  while (true) {
+    yield ++i;
+  }
+})();
+
 interface Location {
   name: string;
   street: string;
@@ -12,6 +19,7 @@ class User extends Model {
   @field public firstName: string;
   @field public lastName: string;
   @field public locations: Location[] = [];
+  @field public readonly seq = idIterator.next().value;
 
   constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
     super();
@@ -52,4 +60,5 @@ test('serialize/deserialize', () => {
   expect(userFromJS).toEqual(user);
   expect(userFromJS.locations).not.toBe(user.locations);
   expect(userFromJS.locations).toEqual(user.locations);
+  expect(userFromJS.seq).toEqual(user.seq);
 });
