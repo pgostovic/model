@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-import md5 from 'md5';
 import cloneDeep from 'lodash.clonedeep';
-import { findData, searchData, Query, Options, saveData, dropData } from './datastore';
+import md5 from 'md5';
+
+import { dropData, findData, Options, Query, saveData, searchData } from './datastore';
 
 export type ModelId = string;
 

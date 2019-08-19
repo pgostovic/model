@@ -1,5 +1,5 @@
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
-import { memoryDataStore, logCollections } from '../memoryDataStore';
+import { logCollections, memoryDataStore } from '../memoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
 

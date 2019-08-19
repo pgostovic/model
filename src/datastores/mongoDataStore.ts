@@ -1,5 +1,6 @@
 import { createLogger } from '@phnq/log';
 import mongodb from 'mongodb';
+
 import { DataStore, Options, Query } from '../datastore';
 import { Data, ModelId } from '../model';
 

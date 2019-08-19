@@ -1,6 +1,7 @@
 import { createLogger } from '@phnq/log';
+
 import { DataStore, Query } from '../datastore';
-import { Data, Value, ModelId } from '../model';
+import { Data, ModelId, Value } from '../model';
 
 const log = createLogger('memoryDataStore');
 
