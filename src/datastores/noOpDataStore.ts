@@ -2,7 +2,11 @@ import { DataStore, Query } from '../datastore';
 import { Data, ModelId } from '../model';
 
 export const noOpDataStore: DataStore = {
-  save: async (modelName: string, data: Data): Promise<ModelId> => {
+  create: async (modelName: string, data: Data): Promise<ModelId> => {
+    throw new Error(`Operation not permitted in this context: save / ${modelName} / ${data}`);
+  },
+
+  update: async (modelName: string, data: Data): Promise<ModelId> => {
     throw new Error(`Operation not permitted in this context: save / ${modelName} / ${data}`);
   },
 
@@ -10,7 +14,7 @@ export const noOpDataStore: DataStore = {
     throw new Error(`Operation not permitted in this context: find / ${modelName} / ${id}`);
   },
 
-  search: async (modelName: string, query: Query): Promise<Data[]> => {
+  search: (modelName: string, query: Query): AsyncIterableIterator<Data> => {
     throw new Error(`Operation not permitted in this context: search / ${modelName} / ${query}`);
   },
 

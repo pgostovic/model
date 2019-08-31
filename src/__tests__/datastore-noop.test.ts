@@ -1,3 +1,4 @@
+import { noOpDataStore } from '../datastores/noOpDataStore';
 import { field, find, Model, search } from '../index';
 
 class User extends Model {
@@ -22,6 +23,15 @@ test('save model instance throws on client', async () => {
 
   try {
     await user.save();
+    fail('Should have thrown');
+  } catch (err) {
+    expect(err).toBeInstanceOf(Error);
+  }
+});
+
+test('update throws', async () => {
+  try {
+    await noOpDataStore.update('name', {});
     fail('Should have thrown');
   } catch (err) {
     expect(err).toBeInstanceOf(Error);

@@ -11,7 +11,13 @@ test('temp coverage', async () => {
   const ds = new PostgresDataStore('the url');
 
   try {
-    await ds.save('model', {});
+    await ds.create('model', {});
+  } catch (err) {
+    expect(err).toBeInstanceOf(Error);
+  }
+
+  try {
+    await ds.update('model', {});
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
   }

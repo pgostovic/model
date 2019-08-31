@@ -61,36 +61,53 @@ const match = (query: IMemoryDataStoreQuery, record: Data): boolean => {
 };
 
 export const logCollections = (): void => {
-  log('COLLECTIONS: ', collections);
+  collections.forEach((value, key) => {
+    console.log('COLLECTION: ', key);
+    console.log(JSON.stringify(value, null, 2));
+  });
 };
 
-export const memoryDataStore: DataStore = {
-  save: async (modelName: string, data: Data): Promise<ModelId> => {
+class MemoryDataStore implements DataStore {
+  async save(modelName: string, data: Data): Promise<ModelId> {
     const id = (data.id as string) || dataId.next().value;
     const records = getCollection(modelName).filter(record => record.id !== id);
     const newRecord = { ...data, id };
     collections.set(modelName, [...records, newRecord]);
     log(`SAVE - ${modelName}(${id})`);
     return id;
-  },
+  }
 
-  find: async (modelName: string, id: ModelId): Promise<Data | undefined> => {
+  create(modelName: string, data: Data): Promise<ModelId> {
+    return this.save(modelName, data);
+  }
+
+  update(modelName: string, data: Data): Promise<ModelId> {
+    return this.save(modelName, data);
+  }
+
+  async find(modelName: string, id: ModelId): Promise<Data | undefined> {
     const record = getCollection(modelName).find(r => r.id === id);
     log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);
     return record;
-  },
+  }
 
-  search: async (modelName: string, query: IMemoryDataStoreQuery): Promise<Data[]> => {
-    const records = getCollection(modelName).filter(record => match(query, record));
-    log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
-    return records;
-  },
+  search(modelName: string, query: any): AsyncIterableIterator<Data> {
+    return (async function*() {
+      const records = getCollection(modelName).filter(record => match(query, record));
+      log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
+      for (const record of records) {
+        yield record;
+      }
+    })();
+  }
 
-  drop: async (modelName: string): Promise<boolean> => {
+  async drop(modelName: string): Promise<boolean> {
     collections.set(modelName, []);
     return true;
-  },
+  }
 
-  // tslint:disable-next-line: no-empty
-  close: async () => {},
-};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async close(): Promise<void> {}
+}
+
+export const memoryDataStore = new MemoryDataStore();

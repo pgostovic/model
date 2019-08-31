@@ -1,7 +1,12 @@
+import AuditLogger from '../../AuditLogger';
+import { addPersistObserver } from '../../datastore';
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
-import { logCollections, memoryDataStore } from '../memoryDataStore';
+import { memoryDataStore } from '../memoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
+
+const auditLogger = new AuditLogger();
+addPersistObserver(auditLogger);
 
 class Car extends Model {
   @field public make: string;
@@ -20,10 +25,16 @@ class Car extends Model {
   }
 }
 
+afterAll(async () => {
+  // logCollections();
+
+  // console.log('RECONSTRUCT', await auditLogger.reconstruct());
+
+  await auditLogger.reconstruct();
+});
+
 beforeEach(async () => {
   await Car.drop();
-
-  logCollections();
 });
 
 test('Saved model gets id', async () => {
@@ -63,14 +74,17 @@ test('Search by attribute', async () => {
   await car2.save();
   await car3.save();
 
-  const volvos = await search(Car, { make: 'Volvo' });
+  const volvos = await search(Car, { make: 'Volvo' }).all();
   expect(volvos.length).toBe(2);
 
-  const blackCars = await search(Car, { colour: 'Black' });
+  const blackCars = await search(Car, { colour: 'Black' }).all();
   expect(blackCars.length).toBe(2);
 
-  const noCars = await search(Car, { colour: 'Black', bubba: [1, 2, 3] });
+  const noCars = await search(Car, { colour: 'Black', bubba: [1, 2, 3] }).all();
   expect(noCars.length).toBe(0);
+
+  const allCars = await search(Car, {}).all();
+  expect(allCars.length).toBe(3);
 });
 
 test('Search by sub-attribute', async () => {
@@ -82,8 +96,9 @@ test('Search by sub-attribute', async () => {
   car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
-  const results = await search(Car, { stuff: { foo: 42, bar: 43 } });
+  const results = await search(Car, { stuff: { foo: 42, bar: 43 } }).all();
   expect(results.length).toBe(1);
+  expect(results[0].stuff).toEqual(car.stuff);
 });
 
 test('Search by sub-attribute, dot notation', async () => {
@@ -95,7 +110,7 @@ test('Search by sub-attribute, dot notation', async () => {
   car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
-  const results = await search(Car, { 'stuff.foo': 42 });
+  const results = await search(Car, { 'stuff.foo': 42 }).all();
   expect(results.length).toBe(1);
 });
 

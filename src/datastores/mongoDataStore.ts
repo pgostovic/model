@@ -1,4 +1,5 @@
 import { createLogger } from '@phnq/log';
+import { AsyncQueue } from '@phnq/streams';
 import mongodb from 'mongodb';
 
 import { DataStore, Options, Query } from '../datastore';
@@ -37,15 +38,19 @@ export class MongoDataStore implements DataStore {
     this.connUrl = connUrl;
   }
 
-  public async save(modelName: string, data: Data): Promise<ModelId> {
+  public async create(modelName: string, data: Data): Promise<ModelId> {
     const col = await this.collection(modelName);
-    const id = data.id as string;
+    return String((await col.insertOne(mongify(data))).insertedId);
+  }
+
+  public async update(modelName: string, data: Data): Promise<ModelId> {
+    const col = await this.collection(modelName);
+    const id = data.id as ModelId;
     if (id) {
       await col.updateOne({ _id: new mongodb.ObjectId(id) }, { $set: mongify(data) });
       return id;
-    } else {
-      return String((await col.insertOne(mongify(data))).insertedId);
     }
+    throw new Error('Must specify id to update a document');
   }
 
   public async find(modelName: string, id: ModelId): Promise<Data | undefined> {
@@ -58,18 +63,29 @@ export class MongoDataStore implements DataStore {
     }
   }
 
-  public async search(modelName: string, query: Query, options: Options): Promise<Data[]> {
-    const col = await this.collection(modelName);
+  public search(modelName: string, query: Query, options: Options): AsyncIterableIterator<Data> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const that = this;
+    return (async function*() {
+      const q = new AsyncQueue<Data>();
+      const col = await that.collection(modelName);
 
-    const results: Data[] = [];
-    await col.find(query, options).forEach(doc => {
-      const data = deMongify(doc);
-      if (data) {
-        results.push(data);
+      col.find(query, options).forEach(
+        doc => {
+          const data = deMongify(doc);
+          if (data) {
+            q.enqueue(data);
+          }
+        },
+        () => {
+          q.flush();
+        },
+      );
+
+      for await (const data of q.iterator()) {
+        yield data;
       }
-    });
-
-    return results;
+    })();
   }
 
   public async drop(modelName: string): Promise<boolean> {

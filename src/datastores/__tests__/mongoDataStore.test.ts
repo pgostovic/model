@@ -80,11 +80,14 @@ test('Search by attribute', async () => {
   await car2.save();
   await car3.save();
 
-  const volvos = await search(Car, { make: 'Volvo' });
+  const volvos = await search(Car, { make: 'Volvo' }).all();
   expect(volvos.length).toBe(2);
 
-  const blackCars = await search(Car, { colour: 'Black' });
+  const blackCars = await search(Car, { colour: 'Black' }).all();
   expect(blackCars.length).toBe(2);
+
+  const allCars = await search(Car, {}).all();
+  expect(allCars.length).toBe(3);
 });
 
 test('Search by sub-attribute', async () => {
@@ -96,7 +99,7 @@ test('Search by sub-attribute', async () => {
   car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
-  const results = await search(Car, { stuff: { foo: 42, bar: 43 } });
+  const results = await search(Car, { stuff: { foo: 42, bar: 43 } }).all();
   expect(results.length).toBe(1);
 });
 
@@ -109,7 +112,7 @@ test('Search by sub-attribute, dot notation', async () => {
   car.stuff = { foo: 42, bar: 43 };
   await car.save();
 
-  const results = await search(Car, { 'stuff.foo': 42 });
+  const results = await search(Car, { 'stuff.foo': 42 }).all();
   expect(results.length).toBe(1);
 });
 

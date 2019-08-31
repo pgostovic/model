@@ -1,7 +1,11 @@
-// tslint:disable: max-classes-per-file
+import AuditLogger from '../AuditLogger';
+import { addPersistObserver } from '../datastore';
 import { memoryDataStore } from '../datastores/memoryDataStore';
 import { noOpDataStore } from '../datastores/noOpDataStore';
 import { datastore, field, find, Model, search, setDefaultDataStore } from '../index';
+
+const auditLogger = new AuditLogger();
+addPersistObserver(auditLogger);
 
 setDefaultDataStore(memoryDataStore);
 
@@ -33,6 +37,10 @@ class UserNoOp extends Model {
     this.lastName = lastName;
   }
 }
+
+afterAll(() => {
+  auditLogger.reconstruct();
+});
 
 test('save model instance', async () => {
   const user = new User({
@@ -87,6 +95,7 @@ test('search for model instances', async () => {
     firstName: 'Fred',
     lastName: 'Smith',
   });
+  fred.stuff = { foo: 5 };
   await fred.save();
 
   const tom = new User({
@@ -94,6 +103,7 @@ test('search for model instances', async () => {
     firstName: 'Tom',
     lastName: 'Smith',
   });
+  tom.stuff = { foo: 5 };
   await tom.save();
 
   const bill = new User({
@@ -101,15 +111,20 @@ test('search for model instances', async () => {
     firstName: 'Bill',
     lastName: 'Jones',
   });
+  bill.stuff = { foo: 7 };
   await bill.save();
 
-  const smiths = await search(User, { lastName: 'Smith' });
+  const smiths = await search(User, { lastName: 'Smith' }).all();
   expect(smiths.length).toBe(2);
 
   const emails = new Set(smiths.map(smith => smith.email));
   expect(emails.has('fred@test.com')).toBe(true);
   expect(emails.has('tom@test.com')).toBe(true);
   expect(emails.has('bill@test.com')).toBe(false);
+
+  smiths.forEach(smith => {
+    expect(smith.stuff).toEqual({ foo: 5 });
+  });
 });
 
 test('search by multiple fields', async () => {
@@ -137,7 +152,7 @@ test('search by multiple fields', async () => {
   const jedSmiths = await search(User, {
     firstName: 'Jed',
     lastName: 'Smith',
-  });
+  }).all();
   expect(jedSmiths.length).toBe(1);
 });
 
@@ -152,13 +167,27 @@ test('deep search', async () => {
 
   const bubba42s = await search(User, {
     stuff: { foo: 42 },
-  });
+  }).all();
   expect(bubba42s.length).toBe(1);
 
   const bubba43s = await search(User, {
     stuff: { foo: 43 },
-  });
+  }).all();
   expect(bubba43s.length).toBe(0);
+});
+
+test('save new with id', async () => {
+  const bubba = new User({
+    email: 'bubba@cheese.com',
+    firstName: 'Bubba',
+    lastName: 'Cheese',
+  });
+  bubba.id = 'abcd1234';
+  bubba.stuff = { foo: 42 };
+  await bubba.save();
+
+  const foundUser = await find(User, bubba.id);
+  expect(foundUser).not.toBeUndefined();
 });
 
 test('datastore decorator', async () => {

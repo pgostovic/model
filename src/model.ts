@@ -3,7 +3,8 @@
 import cloneDeep from 'lodash.clonedeep';
 import md5 from 'md5';
 
-import { dropData, findData, Options, Query, saveData, searchData } from './datastore';
+import Cursor from './Cursor';
+import { createData, dropData, findData, Options, Query, searchData, updateData } from './datastore';
 
 export type ModelId = string;
 
@@ -13,7 +14,7 @@ export interface Data {
   [key: string]: Value | Value[];
 }
 
-type HasId = { id: string };
+export type HasId = { id: string };
 
 const modelClassesById = new Map<string, typeof Model>();
 const fieldNamesByModel = new Map<Function, string[]>();
@@ -44,10 +45,20 @@ export class Model {
     return dropData(this);
   }
 
+  public static async find<T = Model>(id: ModelId): Promise<T & HasId | undefined> {
+    return find(this, id) as Promise<T & HasId | undefined>;
+  }
+
   @field public id?: ModelId;
+  public isPersisted = false;
+
+  constructor() {
+    Object.defineProperty(this, 'isPersisted', { value: false, writable: true, enumerable: false });
+  }
 
   public async save(): Promise<this & HasId> {
-    const id = await saveData(this.constructor, this.getData());
+    const saveOp = this.isPersisted ? updateData : createData;
+    const id = await saveOp(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
@@ -110,14 +121,33 @@ export const find = async <T extends Model>(
   const data = await findData(c, id);
   if (data) {
     const model = new Model();
+    model.isPersisted = true;
     Object.assign(model, data);
     Object.setPrototypeOf(model, c.prototype);
     return (model as unknown) as T & HasId;
   }
 };
 
-export const search = async <T extends Model>(
+export const search = <T extends Model>(
   c: new (...args: any[]) => T,
   query: Query,
   options: Options = undefined,
-): Promise<(T & HasId)[]> => (await searchData(c, query, options)).map(data => new c(data) as T & HasId);
+): Cursor<T> => new Cursor<T>(c, searchData(c, query, options));
+
+// (async function*() {
+//   for await (const data of searchData(c, query, options)) {
+//     const model = new Model();
+//     model.isPersisted = true;
+//     Object.assign(model, data);
+//     Object.setPrototypeOf(model, c.prototype);
+//     yield (model as unknown) as T & HasId;
+//   }
+// })();
+
+export const all = async <T>(cursor: AsyncIterableIterator<T>): Promise<T[]> => {
+  const records: T[] = [];
+  for await (const record of cursor) {
+    records.push(record);
+  }
+  return records;
+};

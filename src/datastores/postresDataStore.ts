@@ -15,7 +15,12 @@ export class PostgresDataStore implements DataStore {
     log('connUrl', this.connUrl);
   }
 
-  public async save(modelName: string, data: Data): Promise<ModelId> {
+  public async create(modelName: string, data: Data): Promise<ModelId> {
+    log('save', modelName, data);
+    throw new Error('Not yet');
+  }
+
+  public async update(modelName: string, data: Data): Promise<ModelId> {
     log('save', modelName, data);
     throw new Error('Not yet');
   }
@@ -25,7 +30,7 @@ export class PostgresDataStore implements DataStore {
     throw new Error('Not yet');
   }
 
-  public async search(modelName: string, query: Query, options: Options): Promise<Data[]> {
+  public search(modelName: string, query: Query, options: Options): AsyncIterableIterator<Data> {
     log('search', modelName, query, options);
     throw new Error('Not yet');
   }
