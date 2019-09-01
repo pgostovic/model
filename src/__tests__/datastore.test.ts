@@ -42,6 +42,10 @@ afterAll(() => {
   auditLogger.reconstruct();
 });
 
+beforeEach(async () => {
+  await User.drop();
+});
+
 test('save model instance', async () => {
   const user = new User({
     email: 'user@test.com',
@@ -125,6 +129,72 @@ test('search for model instances', async () => {
   smiths.forEach(smith => {
     expect(smith.stuff).toEqual({ foo: 5 });
   });
+});
+
+test('search call iterator multiple times', async () => {
+  const fred = new User({
+    email: 'fred@test.com',
+    firstName: 'Fred',
+    lastName: 'Smith',
+  });
+  fred.stuff = { foo: 5 };
+  await fred.save();
+
+  const tom = new User({
+    email: 'tom@test.com',
+    firstName: 'Tom',
+    lastName: 'Smith',
+  });
+  tom.stuff = { foo: 5 };
+  await tom.save();
+
+  const bill = new User({
+    email: 'bill@test.com',
+    firstName: 'Bill',
+    lastName: 'Jones',
+  });
+  bill.stuff = { foo: 7 };
+  await bill.save();
+
+  const smithsCursor = search(User, { lastName: 'Smith' });
+  expect((await smithsCursor.all()).length).toBe(2);
+  expect((await smithsCursor.all()).length).toBe(2);
+});
+
+test('search first', async () => {
+  const fred = new User({
+    email: 'fred@test.com',
+    firstName: 'Fred',
+    lastName: 'Smith',
+  });
+  fred.stuff = { foo: 5 };
+  await fred.save();
+
+  const tom = new User({
+    email: 'tom@test.com',
+    firstName: 'Tom',
+    lastName: 'Smith',
+  });
+  tom.stuff = { foo: 5 };
+  await tom.save();
+
+  const bill = new User({
+    email: 'bill@test.com',
+    firstName: 'Bill',
+    lastName: 'Jones',
+  });
+  bill.stuff = { foo: 7 };
+  await bill.save();
+
+  const allSmiths = await search(User, { lastName: 'Smith' }).all();
+  const firstSmith = await search(User, { lastName: 'Smith' }).first();
+
+  expect(firstSmith).not.toBeUndefined();
+  if (firstSmith) {
+    expect(allSmiths[0].id).toBe(firstSmith.id);
+  } else {
+    fail('Should have been found');
+  }
 });
 
 test('search by multiple fields', async () => {
