@@ -1,5 +1,5 @@
 import { setDefaultDataStore } from '../../index';
-import { PostgresDataStore } from '../postresDataStore';
+import { PostgresDataStore } from '../PostresDataStore';
 
 const postgresDataStore = new PostgresDataStore(
   process.env.POSTGRES_URI || 'postgres://localhost:5432/phnq_model_test',

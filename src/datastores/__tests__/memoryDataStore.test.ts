@@ -1,7 +1,7 @@
 import AuditLogger from '../../AuditLogger';
-import { addPersistObserver } from '../../datastore';
+import { addPersistObserver } from '../../Datastore';
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
-import { memoryDataStore } from '../memoryDataStore';
+import { memoryDataStore } from '../MemoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
 

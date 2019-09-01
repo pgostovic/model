@@ -1,5 +1,5 @@
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
-import { MongoDataStore } from '../mongoDataStore';
+import { MongoDataStore } from '../MongoDataStore';
 
 const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
 

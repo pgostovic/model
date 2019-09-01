@@ -1,6 +1,4 @@
-/* tslint:disable max-classes-per-file */
-
-import { classId, field, fromJS, Model } from '../model';
+import { classId, field, fromJS, Model } from '../Model';
 
 class User extends Model {
   @field public email: string;

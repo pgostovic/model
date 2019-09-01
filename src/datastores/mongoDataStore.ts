@@ -2,8 +2,8 @@ import { createLogger } from '@phnq/log';
 import { AsyncQueue } from '@phnq/streams';
 import mongodb from 'mongodb';
 
-import { DataStore, Options, Query } from '../datastore';
-import { Data, ModelId } from '../model';
+import { DataStore, Options, Query } from '../Datastore';
+import { Data, ModelId } from '../Model';
 
 const log = createLogger('mongoDataStore');
 

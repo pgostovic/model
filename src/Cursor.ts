@@ -1,4 +1,4 @@
-import { Data, HasId, Model } from './model';
+import { Data, HasId, Model } from './Model';
 
 class Cursor<T> {
   private modelIterator: AsyncIterableIterator<T>;

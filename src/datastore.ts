@@ -1,5 +1,5 @@
 import { noOpDataStore } from './datastores/noOpDataStore';
-import { Data, Model, ModelId } from './model';
+import { Data, Model, ModelId } from './Model';
 
 export type Query = any;
 export type Options = any;

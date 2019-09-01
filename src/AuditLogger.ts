@@ -1,5 +1,5 @@
-import { PersistObserver, PersistOperation } from './datastore';
-import { Data, field, Model, search } from './model';
+import { PersistObserver, PersistOperation } from './Datastore';
+import { Data, field, Model, search } from './Model';
 
 enum AuditEventOperation {
   Create = 'create',

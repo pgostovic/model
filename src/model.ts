@@ -4,7 +4,7 @@ import cloneDeep from 'lodash.clonedeep';
 import md5 from 'md5';
 
 import Cursor from './Cursor';
-import { createData, dropData, findData, Options, Query, searchData, updateData } from './datastore';
+import { createData, dropData, findData, Options, Query, searchData, updateData } from './Datastore';
 
 export type ModelId = string;
 

@@ -1,5 +1,5 @@
-import { DataStore, Query } from '../datastore';
-import { Data, ModelId } from '../model';
+import { DataStore, Query } from '../Datastore';
+import { Data, ModelId } from '../Model';
 
 export const noOpDataStore: DataStore = {
   create: async (modelName: string, data: Data): Promise<ModelId> => {
@@ -22,6 +22,5 @@ export const noOpDataStore: DataStore = {
     throw new Error(`Operation not permitted in this context: drop / ${modelName}`);
   },
 
-  // tslint:disable-next-line: no-empty
   close: async () => {},
 };
