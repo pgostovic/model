@@ -13,7 +13,7 @@ class Cursor<T extends Model> {
 
       for await (const data of recordIterator) {
         const model = new Model();
-        model.isPersisted = true;
+        model.persistedData = data;
         Object.assign(model, data);
         Object.setPrototypeOf(model, c.prototype);
         yield (model as unknown) as T & HasId;

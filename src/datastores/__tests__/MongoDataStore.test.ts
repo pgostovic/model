@@ -63,6 +63,13 @@ test('Retrieve by id, update', async () => {
     expect(foundCar.id).toBe(savedCar.id);
 
     foundCar.colour = 'Yellow';
+
+    if (foundCar.persistedData) {
+      expect(foundCar.persistedData.colour).toBe('Willow');
+    } else {
+      fail('foundCar.persistedData not present');
+    }
+
     await foundCar.save();
 
     const foundUpdatedCar = await find(Car, savedCar.id);

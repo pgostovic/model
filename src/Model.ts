@@ -50,21 +50,23 @@ export class Model {
   }
 
   @field public id?: ModelId;
-  public isPersisted = false;
+  public persistedData?: Data = undefined;
 
   constructor() {
-    Object.defineProperty(this, 'isPersisted', { value: false, writable: true, enumerable: false });
+    Object.defineProperty(this, 'persistedData', { value: undefined, writable: true, enumerable: false });
   }
 
   public async save(): Promise<this & HasId> {
-    const saveOp = this.isPersisted ? updateData : createData;
+    const saveOp = this.persistedData ? updateData : createData;
     const id = await saveOp(this.constructor, this.getData());
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
+      clone.persistedData = this.getData();
       return clone as this & HasId;
     }
     this.id = id;
+    this.persistedData = this.getData();
     return this as this & HasId;
   }
 
@@ -121,7 +123,7 @@ export const find = async <T extends Model>(
   const data = await findData(c, id);
   if (data) {
     const model = new Model();
-    model.isPersisted = true;
+    model.persistedData = data;
     Object.assign(model, data);
     Object.setPrototypeOf(model, c.prototype);
     return (model as unknown) as T & HasId;
