@@ -14,7 +14,7 @@ export interface Data {
   [key: string]: Value | Value[];
 }
 
-export type HasId = { id: string };
+export type HasId = { id: ModelId };
 
 const modelClassesById = new Map<string, typeof Model>();
 const fieldNamesByModel = new Map<Function, string[]>();
