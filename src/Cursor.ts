@@ -1,4 +1,5 @@
 import { Data, HasId, Model } from './Model';
+import cloneDeep = require('lodash.clonedeep');
 
 class Cursor<T extends Model> {
   private modelIterator: () => AsyncIterableIterator<T & HasId>;
@@ -13,7 +14,7 @@ class Cursor<T extends Model> {
 
       for await (const data of recordIterator) {
         const model = new Model();
-        model.persistedData = data;
+        model.persistedData = cloneDeep(data);
         Object.assign(model, data);
         Object.setPrototypeOf(model, c.prototype);
         yield (model as unknown) as T & HasId;

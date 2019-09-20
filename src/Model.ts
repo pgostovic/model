@@ -62,11 +62,11 @@ export class Model {
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
-      clone.persistedData = this.getData();
+      clone.persistedData = cloneDeep(this.getData());
       return clone as this & HasId;
     }
     this.id = id;
-    this.persistedData = this.getData();
+    this.persistedData = cloneDeep(this.getData());
     return this as this & HasId;
   }
 
@@ -123,7 +123,7 @@ export const find = async <T extends Model>(
   const data = await findData(c, id);
   if (data) {
     const model = new Model();
-    model.persistedData = data;
+    model.persistedData = cloneDeep(data);
     Object.assign(model, data);
     Object.setPrototypeOf(model, c.prototype);
     return (model as unknown) as T & HasId;
