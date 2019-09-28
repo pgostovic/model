@@ -16,9 +16,12 @@ export interface DataStore {
 const dataStoresByModel = new Map<typeof Model, DataStore>();
 
 // Decorator to mark a model's datastore
-export const datastore = (ds: DataStore, collectionName?: string) => (modelClass: any) => {
-  modelClass.collectionName = collectionName || modelClass.name;
+export const datastore = (ds: DataStore) => (modelClass: any) => {
   dataStoresByModel.set(modelClass, ds);
+};
+
+export const collection = (collectionName?: string) => (modelClass: any) => {
+  modelClass.collectionName = collectionName;
 };
 
 let defaultDataStore: DataStore = noOpDataStore;
