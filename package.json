@@ -19,14 +19,14 @@
     "@types/jest": "^23.3.14",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/md5": "^2.1.33",
-    "@types/mongodb": "^3.3.1",
-    "@types/node": "^10.14.18",
-    "@types/pg": "^7.11.1",
+    "@types/mongodb": "^3.3.6",
+    "@types/node": "^10.14.22",
+    "@types/pg": "^7.11.2",
     "@types/rimraf": "^2.0.2",
-    "@typescript-eslint/eslint-plugin": "^2.3.0",
-    "@typescript-eslint/parser": "^2.3.0",
-    "eslint": "^6.4.0",
-    "eslint-config-prettier": "^6.3.0",
+    "@typescript-eslint/eslint-plugin": "^2.4.0",
+    "@typescript-eslint/parser": "^2.4.0",
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-simple-import-sort": "^4.0.0",
     "jest": "^24.9.0",
@@ -34,14 +34,14 @@
     "rimraf": "^2.7.1",
     "ts-jest": "^24.1.0",
     "ts-node": "^8.4.1",
-    "typescript": "^3.6.3"
+    "typescript": "^3.6.4"
   },
   "dependencies": {
     "@phnq/log": "^1.1.4",
     "@phnq/streams": "^1.1.2",
     "lodash.clonedeep": "^4.5.0",
     "md5": "^2.2.1",
-    "mongodb": "^3.3.2",
+    "mongodb": "^3.3.3",
     "pg": "^7.12.1",
     "reflect-metadata": "^0.1.13"
   }

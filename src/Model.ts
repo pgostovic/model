@@ -71,7 +71,7 @@ export class Model {
   }
 
   private getData(): Data {
-    const fieldNames = fieldNamesByModel.get(this.constructor) || [];
+    const fieldNames = getFieldNames(this.constructor);
     const data: Data = {};
     fieldNames.forEach((key: string) => {
       data[key] = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
@@ -103,7 +103,7 @@ export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
   const modelClass = mClass || modelClassesById.get(cid);
   if (modelClass) {
     const data: Data = {};
-    const fieldNames = fieldNamesByModel.get(modelClass) || [];
+    const fieldNames = getFieldNames(modelClass);
     fieldNames.forEach(name => {
       data[name] = js[name];
     });
@@ -136,20 +136,22 @@ export const search = <T extends Model>(
   options: Options = undefined,
 ): Cursor<T> => new Cursor<T>(c, searchData(c, query, options));
 
-// (async function*() {
-//   for await (const data of searchData(c, query, options)) {
-//     const model = new Model();
-//     model.isPersisted = true;
-//     Object.assign(model, data);
-//     Object.setPrototypeOf(model, c.prototype);
-//     yield (model as unknown) as T & HasId;
-//   }
-// })();
-
 export const all = async <T>(cursor: AsyncIterableIterator<T>): Promise<T[]> => {
   const records: T[] = [];
   for await (const record of cursor) {
     records.push(record);
   }
   return records;
+};
+
+const getFieldNames = (modelClass: Function): string[] => {
+  const fieldNames = new Set<string>();
+  let mc = modelClass;
+  do {
+    (fieldNamesByModel.get(mc) || []).forEach(fieldName => {
+      fieldNames.add(fieldName);
+    });
+    mc = Object.getPrototypeOf(mc);
+  } while (mc !== Model);
+  return [...fieldNames];
 };
