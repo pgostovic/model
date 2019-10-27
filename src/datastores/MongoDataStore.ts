@@ -1,5 +1,4 @@
 import { createLogger } from '@phnq/log';
-import { AsyncQueue } from '@phnq/streams';
 import mongodb from 'mongodb';
 
 import { DataStore, Options, Query } from '../Datastore';
@@ -67,23 +66,12 @@ export class MongoDataStore implements DataStore {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
     return (async function*() {
-      const q = new AsyncQueue<Data>();
       const col = await that.collection(modelName);
-
-      col.find(query, options).forEach(
-        doc => {
-          const data = deMongify(doc);
-          if (data) {
-            q.enqueue(data);
-          }
-        },
-        () => {
-          q.flush();
-        },
-      );
-
-      for await (const data of q.iterator()) {
-        yield data;
+      for await (const doc of col.find(query, options)) {
+        const data = deMongify(doc);
+        if (data) {
+          yield data;
+        }
       }
     })();
   }

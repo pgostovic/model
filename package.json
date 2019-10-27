@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "@phnq/log": "^1.1.4",
-    "@phnq/streams": "^1.1.2",
     "lodash.clonedeep": "^4.5.0",
     "md5": "^2.2.1",
     "mongodb": "^3.3.3",
