@@ -1,4 +1,8 @@
+import { setDefaultDataStore } from '../Datastore';
+import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { field, fromJS, Model } from '../index';
+
+setDefaultDataStore(memoryDataStore);
 
 const idIterator = (function*(): IterableIterator<number> {
   let i = 0;
@@ -61,4 +65,23 @@ test('serialize/deserialize', () => {
   expect(userFromJS.locations).not.toBe(user.locations);
   expect(userFromJS.locations).toEqual(user.locations);
   expect(userFromJS.seq).toEqual(user.seq);
+  expect(userFromJS.persistedData).toBeUndefined();
+});
+
+test('serialize/deserialize persisted', async () => {
+  const user = new User({
+    email: 'bubba@gump.com',
+    firstName: 'Bubba',
+    lastName: 'Gump',
+  });
+
+  await user.save();
+
+  const userJS = user.toJS();
+  const userFromJS = fromJS<User>(userJS);
+
+  expect(userFromJS).toBeInstanceOf(User);
+  expect(userFromJS).not.toBe(user);
+  expect(userFromJS).toEqual(user);
+  expect(userFromJS.persistedData).not.toBeUndefined();
 });

@@ -83,6 +83,7 @@ export class Model {
     return Object.freeze({
       ...this.clone().getData(),
       _cid_: getClassId(this.constructor),
+      _isPersisted_: this.persistedData !== undefined,
     });
   }
 
@@ -100,6 +101,7 @@ export class Model {
 
 export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
   const cid = js._cid_ as string;
+  const isPersisted = js._isPersisted_ as boolean;
   const modelClass = mClass || modelClassesById.get(cid);
   if (modelClass) {
     const data: Data = {};
@@ -111,6 +113,9 @@ export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
     const model = new Model();
     Object.assign(model, data);
     Object.setPrototypeOf(model, modelClass.prototype);
+    if (isPersisted) {
+      model.persistedData = cloneDeep(data);
+    }
     return (model as unknown) as T;
   }
   throw new Error(`No model class registered for id: ${cid}`);
