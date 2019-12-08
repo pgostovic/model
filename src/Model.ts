@@ -74,7 +74,10 @@ export class Model {
     const fieldNames = getFieldNames(this.constructor);
     const data: Data = {};
     fieldNames.forEach((key: string) => {
-      data[key] = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
+      const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
+      if (value !== undefined) {
+        data[key] = value;
+      }
     });
     return data;
   }
