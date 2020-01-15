@@ -1,7 +1,7 @@
 import { createLogger } from '@phnq/log';
-import mongodb from 'mongodb';
+import mongodb, { Cursor, FilterQuery, FindOneOptions, IndexOptions } from 'mongodb';
 
-import { DataStore, Options, Query } from '../Datastore';
+import { DataStore, Options, Query, SearchResult } from '../Datastore';
 import { Data, ModelId } from '../Model';
 
 const log = createLogger('mongoDataStore');
@@ -62,18 +62,27 @@ export class MongoDataStore implements DataStore {
     }
   }
 
-  public search(modelName: string, query: Query, options: Options): AsyncIterableIterator<Data> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const that = this;
-    return (async function*() {
-      const col = await that.collection(modelName);
-      for await (const doc of col.find(query, options)) {
-        const data = deMongify(doc);
-        if (data) {
-          yield data;
-        }
-      }
+  public search(modelName: string, query: Query, options: Options): SearchResult {
+    const cursorPromise = (async (): Promise<Cursor> => {
+      const col = await this.collection(modelName);
+      return col.find(query as FilterQuery<unknown>, options as FindOneOptions);
     })();
+
+    return {
+      count: new Promise<number>(async resolve => {
+        const cursor = await cursorPromise;
+        resolve(await cursor.count());
+      }),
+      iterator: (async function*() {
+        const cursor = await cursorPromise;
+        for await (const doc of cursor) {
+          const data = deMongify(doc);
+          if (data) {
+            yield data;
+          }
+        }
+      })(),
+    };
   }
 
   public async drop(modelName: string): Promise<boolean> {
@@ -91,9 +100,9 @@ export class MongoDataStore implements DataStore {
     return (await this.getClient()).close();
   }
 
-  public async createIndex(modelName: string, spec: any, options: any): Promise<void> {
+  public async createIndex(modelName: string, spec: unknown, options: unknown): Promise<void> {
     const col = await this.collection(modelName);
-    return col.createIndex(spec, options);
+    await col.createIndex(spec, options as IndexOptions);
   }
 
   private async collection(name: string): Promise<mongodb.Collection> {

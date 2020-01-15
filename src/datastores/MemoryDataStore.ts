@@ -1,6 +1,6 @@
 import { createLogger } from '@phnq/log';
 
-import { DataStore, Query } from '../Datastore';
+import { DataStore, Query, SearchResult } from '../Datastore';
 import { Data, ModelId, Value } from '../Model';
 
 const log = createLogger('memoryDataStore');
@@ -52,7 +52,7 @@ const match = (query: IMemoryDataStoreQuery, record: Data): boolean => {
   let isMatch = true;
   Object.keys(query).forEach(k => {
     if (k.match(/\./)) {
-      isMatch = isMatch && deepMatch(formatDotQuery(k, query[k]), record, false);
+      isMatch = isMatch && deepMatch(formatDotQuery(k, (query as { [key: string]: Value })[k]), record, false);
     } else {
       isMatch = isMatch && deepMatch({ [k]: query[k] }, record, true);
     }
@@ -91,14 +91,19 @@ class MemoryDataStore implements DataStore {
     return record;
   }
 
-  search(modelName: string, query: any): AsyncIterableIterator<Data> {
-    return (async function*() {
-      const records = getCollection(modelName).filter(record => match(query, record));
-      log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
-      for (const record of records) {
-        yield record;
-      }
-    })();
+  search(modelName: string, query: any): SearchResult {
+    const records = getCollection(modelName).filter(record => match(query, record));
+    return {
+      count: new Promise<number>(resolve => {
+        resolve(records.length);
+      }),
+      iterator: (async function*() {
+        log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
+        for (const record of records) {
+          yield record;
+        }
+      })(),
+    };
   }
 
   async drop(modelName: string): Promise<boolean> {

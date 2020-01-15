@@ -1,18 +1,21 @@
-import { Data, HasId, Model } from './Model';
+import { HasId, Model } from './Model';
 import cloneDeep = require('lodash.clonedeep');
+import { SearchResult } from './Datastore';
 
 class Cursor<T extends Model> {
   private modelIterator: () => AsyncIterableIterator<T & HasId>;
   private cache: (T & HasId)[] = [];
+  public readonly count: Promise<number>;
 
-  public constructor(c: new (...args: any[]) => T, recordIterator: AsyncIterableIterator<Data>) {
+  public constructor(c: new (...args: unknown[]) => T, searchResult: SearchResult) {
     const cache = this.cache;
+    this.count = searchResult.count;
     this.modelIterator = async function*() {
       for (const cached of cache) {
         yield cached;
       }
 
-      for await (const data of recordIterator) {
+      for await (const data of searchResult.iterator) {
         const model = new Model();
         model.persistedData = cloneDeep(data);
         Object.assign(model, data);

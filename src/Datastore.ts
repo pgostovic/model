@@ -1,14 +1,19 @@
 import { noOpDataStore } from './datastores/noOpDataStore';
 import { Data, Model, ModelId } from './Model';
 
-export type Query = any;
-export type Options = any;
+export type Query = unknown;
+export type Options = unknown;
+
+export interface SearchResult {
+  count: Promise<number>;
+  iterator: AsyncIterableIterator<Data>;
+}
 
 export interface DataStore {
   create(modelName: string, data: Data): Promise<ModelId>;
   update(modelName: string, data: Data): Promise<ModelId>;
   find(modelName: string, id: ModelId): Promise<Data | undefined>;
-  search(modelName: string, query: Query, options: Options): AsyncIterableIterator<Data>;
+  search(modelName: string, query: Query, options: Options): SearchResult;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
 }
@@ -72,7 +77,7 @@ export const updateData = async (modelClass: any, data: Data): Promise<ModelId> 
 export const findData = (modelClass: any, id: ModelId): Promise<Data | undefined> =>
   getDataStore(modelClass).find(modelClass.collectionName || modelClass.name, id);
 
-export const searchData = (modelClass: any, query: Query, options: Options): AsyncIterableIterator<Data> =>
+export const searchData = (modelClass: any, query: Query, options: Options): SearchResult =>
   getDataStore(modelClass).search(modelClass.collectionName || modelClass.name, query, options);
 
 export const dropData = async (modelClass: any): Promise<boolean> => {

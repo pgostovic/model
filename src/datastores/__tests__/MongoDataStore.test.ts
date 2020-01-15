@@ -123,6 +123,22 @@ test('Search by sub-attribute, dot notation', async () => {
   expect(results.length).toBe(1);
 });
 
+test('Search cursor count', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  const car3 = new Car({ make: 'Honda', model: 'Accord', colour: 'Black' });
+  await car1.save();
+  await car2.save();
+  await car3.save();
+
+  const volvosCursor = search(Car, { make: 'Volvo' });
+  expect(await volvosCursor.count).toBe(2);
+
+  const blackCarsCursor = search(Car, { colour: 'Black' });
+  expect((await blackCarsCursor.all()).length).toBe(2);
+  expect(await blackCarsCursor.count).toBe(2);
+});
+
 afterAll(async () => {
   await mongoDataStore.close();
 });
