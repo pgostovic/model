@@ -1,4 +1,4 @@
-import { DataStore, Query } from '../Datastore';
+import { DataStore, Query, SearchResult } from '../Datastore';
 import { Data, ModelId } from '../Model';
 
 export const noOpDataStore: DataStore = {
@@ -14,7 +14,7 @@ export const noOpDataStore: DataStore = {
     throw new Error(`Operation not permitted in this context: find / ${modelName} / ${id}`);
   },
 
-  search: (modelName: string, query: Query): AsyncIterableIterator<Data> => {
+  search: (modelName: string, query: Query): SearchResult => {
     throw new Error(`Operation not permitted in this context: search / ${modelName} / ${query}`);
   },
 
