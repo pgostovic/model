@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
-
 import cloneDeep from 'lodash.clonedeep';
 import md5 from 'md5';
 
@@ -16,37 +15,41 @@ export interface Data {
 
 export type HasId = { id: ModelId };
 
-const modelClassesById = new Map<string, typeof Model>();
+const registeredClasses = new Map<string, typeof Model>();
 const fieldNamesByModel = new Map<Function, string[]>();
 
 export const field = (model: Model, key: string): void => {
   const modelCls = model.constructor;
-
   const fieldNames = fieldNamesByModel.get(modelCls) || ['id'];
   fieldNames.push(key);
   fieldNamesByModel.set(modelCls, fieldNames);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const classId = (cid: string): any => (modelClass: { cid?: string }) => {
-  modelClass.cid = cid;
-};
-
-const getClassId = (modelClass: { cid?: string; name: string }): string => {
-  return modelClass.cid || md5(modelClass.name);
-};
-
 export class Model {
+  public static get classNames(): string[] {
+    return getClasses(this).map(c => c.name);
+  }
+
+  public static get collectionName(): string {
+    this.register();
+    return this.classNames[0];
+  }
+
+  public static get cid(): string {
+    const classNames = this.classNames;
+    return md5(classNames[classNames.length - 1]);
+  }
+
   public static register(): void {
-    modelClassesById.set(getClassId(this), this);
+    registeredClasses.set(this.cid, this);
   }
 
   public static drop(): Promise<boolean> {
     return dropData(this);
   }
 
-  public static async find<T = Model>(id: ModelId): Promise<T & HasId | undefined> {
-    return find(this, id) as Promise<T & HasId | undefined>;
+  public static async find<T = Model>(id: ModelId): Promise<(T & HasId) | undefined> {
+    return find(this, id) as Promise<(T & HasId) | undefined>;
   }
 
   @field public id?: ModelId;
@@ -58,7 +61,7 @@ export class Model {
 
   public async save(): Promise<this & HasId> {
     const saveOp = this.persistedData ? updateData : createData;
-    const id = await saveOp(this.constructor, this.getData());
+    const id = await saveOp(this.getClass(), this.toJS());
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
@@ -71,7 +74,7 @@ export class Model {
   }
 
   private getData(): Data {
-    const fieldNames = getFieldNames(this.constructor);
+    const fieldNames = getFieldNames(this.getClass());
     const data: Data = {};
     fieldNames.forEach((key: string) => {
       const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
@@ -85,7 +88,8 @@ export class Model {
   public toJS(): Data {
     return Object.freeze({
       ...this.clone().getData(),
-      _cid_: getClassId(this.constructor),
+      _cid_: this.getClass().cid,
+      _classes_: this.getClass().classNames,
       _isPersisted_: this.persistedData !== undefined,
     });
   }
@@ -100,12 +104,16 @@ export class Model {
   public freeze(): this {
     return Object.freeze(this);
   }
+
+  public getClass(): typeof Model {
+    return Object.getPrototypeOf(this).constructor;
+  }
 }
 
-export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
+export const fromJS = <T extends Model>(js: Data, mClass?: typeof Model): T => {
   const cid = js._cid_ as string;
   const isPersisted = js._isPersisted_ as boolean;
-  const modelClass = mClass || modelClassesById.get(cid);
+  const modelClass = mClass || registeredClasses.get(cid);
   if (modelClass) {
     const data: Data = {};
     const fieldNames = getFieldNames(modelClass);
@@ -119,30 +127,33 @@ export const fromJS = <T>(js: Data, mClass?: typeof Model): T => {
     if (isPersisted) {
       model.persistedData = cloneDeep(data);
     }
-    return (model as unknown) as T;
+    return model as T;
   }
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
 export const find = async <T extends Model>(
-  c: new (...args: any[]) => T,
+  c: { new (...args: never[]): T },
   id: ModelId,
-): Promise<T & HasId | undefined> => {
-  const data = await findData(c, id);
+): Promise<(T & HasId) | undefined> => {
+  const data = await findData((c as unknown) as typeof Model, id);
   if (data) {
-    const model = new Model();
-    model.persistedData = cloneDeep(data);
-    Object.assign(model, data);
-    Object.setPrototypeOf(model, c.prototype);
-    return (model as unknown) as T & HasId;
+    const result = fromJS({ ...data, _isPersisted_: true });
+    if (result instanceof c) {
+      return result as T & HasId;
+    }
   }
+  return undefined;
 };
 
 export const search = <T extends Model>(
-  c: new (...args: any[]) => T,
+  c: { new (...args: never[]): T },
   query: Query,
   options: Options = undefined,
-): Cursor<T> => new Cursor<T>(c, searchData(c, query, options));
+): Cursor<T> => {
+  const modelClass = (c as unknown) as typeof Model;
+  return new Cursor<T>(searchData(modelClass, query, options), m => m.getClass().classNames.includes(modelClass.name));
+};
 
 export const all = async <T>(cursor: AsyncIterableIterator<T>): Promise<T[]> => {
   const records: T[] = [];
@@ -152,14 +163,22 @@ export const all = async <T>(cursor: AsyncIterableIterator<T>): Promise<T[]> => 
   return records;
 };
 
-const getFieldNames = (modelClass: Function): string[] => {
-  const fieldNames = new Set<string>();
-  let mc = modelClass;
+const getFieldNames = (modelClass: typeof Model): string[] => [
+  ...new Set(
+    getClasses(modelClass).reduce(
+      (fieldNames, mc) => [...fieldNames, ...(fieldNamesByModel.get(mc) || [])],
+      [] as string[],
+    ),
+  ),
+];
+
+const getClasses = (concreteModelClass: typeof Model): Array<typeof Model> => {
+  let modelClass = concreteModelClass;
+  const classes: Array<typeof Model> = [];
   do {
-    (fieldNamesByModel.get(mc) || []).forEach(fieldName => {
-      fieldNames.add(fieldName);
-    });
-    mc = Object.getPrototypeOf(mc);
-  } while (mc !== Model);
-  return [...fieldNames];
+    classes.push(modelClass);
+    modelClass = Object.getPrototypeOf(modelClass);
+  } while (modelClass && modelClass !== Model);
+  classes.reverse();
+  return classes;
 };

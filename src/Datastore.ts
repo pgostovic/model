@@ -25,17 +25,13 @@ export const datastore = (ds: DataStore) => (modelClass: any) => {
   dataStoresByModel.set(modelClass, ds);
 };
 
-export const collection = (collectionName?: string) => (modelClass: any) => {
-  modelClass.collectionName = collectionName;
-};
-
 let defaultDataStore: DataStore = noOpDataStore;
 
 export const setDefaultDataStore = (ds: DataStore): void => {
   defaultDataStore = ds;
 };
 
-const getDataStore = (modelClass: any): DataStore => {
+const getDataStore = (modelClass: typeof Model): DataStore => {
   const ds = dataStoresByModel.get(modelClass) || defaultDataStore;
   if (!ds) {
     throw new Error(`No datastore set for ${modelClass.collectionName}`);
@@ -60,28 +56,28 @@ export const addPersistObserver = (observer: PersistObserver): void => {
   observers.push(observer);
 };
 
-export const createData = async (modelClass: any, data: Data): Promise<ModelId> => {
-  const collectionName = modelClass.collectionName || modelClass.name;
+export const createData = async (modelClass: typeof Model, data: Data): Promise<ModelId> => {
+  const collectionName = modelClass.collectionName;
   const id = await getDataStore(modelClass).create(collectionName, data);
   observers.forEach(observer => observer.observe(PersistOperation.Create, collectionName, { ...data, id }));
   return id;
 };
 
-export const updateData = async (modelClass: any, data: Data): Promise<ModelId> => {
-  const collectionName = modelClass.collectionName || modelClass.name;
+export const updateData = async (modelClass: typeof Model, data: Data): Promise<ModelId> => {
+  const collectionName = modelClass.collectionName;
   const id = await getDataStore(modelClass).update(collectionName, data);
   observers.forEach(observer => observer.observe(PersistOperation.Update, collectionName, { ...data, id }));
   return id;
 };
 
-export const findData = (modelClass: any, id: ModelId): Promise<Data | undefined> =>
-  getDataStore(modelClass).find(modelClass.collectionName || modelClass.name, id);
+export const findData = (modelClass: typeof Model, id: ModelId): Promise<Data | undefined> =>
+  getDataStore(modelClass).find(modelClass.collectionName, id);
 
-export const searchData = (modelClass: any, query: Query, options: Options): SearchResult =>
-  getDataStore(modelClass).search(modelClass.collectionName || modelClass.name, query, options);
+export const searchData = (modelClass: typeof Model, query: Query, options: Options): SearchResult =>
+  getDataStore(modelClass).search(modelClass.collectionName, query, options);
 
-export const dropData = async (modelClass: any): Promise<boolean> => {
-  const collectionName = modelClass.collectionName || modelClass.name;
+export const dropData = async (modelClass: typeof Model): Promise<boolean> => {
+  const collectionName = modelClass.collectionName;
   const dropped = await getDataStore(modelClass).drop(collectionName);
   observers.forEach(observer => observer.observe(PersistOperation.Drop, collectionName, {}));
   return dropped;

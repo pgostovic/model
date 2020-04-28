@@ -5,7 +5,7 @@ import { Data, ModelId, Value } from '../Model';
 
 const log = createLogger('memoryDataStore');
 
-export type IMemoryDataStoreQuery = Query & Data;
+export type MemoryDataStoreQuery = Query & Data;
 
 const collections = new Map<string, Data[]>();
 
@@ -48,7 +48,7 @@ const deepMatch = (query: Value, data: Value, matchAll: boolean): boolean => {
   return query === data;
 };
 
-const match = (query: IMemoryDataStoreQuery, record: Data): boolean => {
+const match = (query: MemoryDataStoreQuery, record: Data): boolean => {
   let isMatch = true;
   Object.keys(query).forEach(k => {
     if (k.match(/\./)) {

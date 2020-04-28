@@ -1,4 +1,4 @@
-import { classId, field, fromJS, Model } from '../Model';
+import { field, fromJS, Model } from '../Model';
 
 class User extends Model {
   @field public email: string;
@@ -13,11 +13,6 @@ class User extends Model {
     super();
     this.email = email;
   }
-}
-
-@classId('MyClassId')
-class WithExplicitClassId extends Model {
-  @field public stuff?: string;
 }
 
 class WithDefaults extends Model {
@@ -117,10 +112,4 @@ test('fromJS with non-existent class id', () => {
   expect(() => {
     fromJS({ nothing: 'much' });
   }).toThrow();
-});
-
-test('Explicit class Id', () => {
-  const obj = new WithExplicitClassId();
-
-  expect(obj.toJS()._cid_).toBe('MyClassId');
 });
