@@ -152,6 +152,7 @@ export const search = <T extends Model>(
   options: Options = undefined,
 ): Cursor<T> => {
   const modelClass = (c as unknown) as typeof Model;
+  // TODO: Need to add class names to the query.
   return new Cursor<T>(searchData(modelClass, query, options), m => m.getClass().classNames.includes(modelClass.name));
 };
 
