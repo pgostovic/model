@@ -1,9 +1,9 @@
 import { SearchResult } from './Datastore';
-import { fromJS, HasId, Model } from './Model';
+import { fromJS, Model } from './Model';
 
 class Cursor<T extends Model> {
-  private modelIterator: () => AsyncIterableIterator<T & HasId>;
-  private cache: (T & HasId)[] = [];
+  private modelIterator: () => AsyncIterableIterator<T>;
+  private cache: T[] = [];
   public readonly count: Promise<number>;
 
   public constructor(searchResult: SearchResult, filter: (m: Model) => boolean = () => true) {
@@ -17,26 +17,26 @@ class Cursor<T extends Model> {
       for await (const data of searchResult.iterator) {
         const model = fromJS({ ...data, _isPersisted_: true });
         if (filter(model)) {
-          yield model as T & HasId;
-          cache.push(model as T & HasId);
+          yield model as T;
+          cache.push(model as T);
         }
       }
     };
   }
 
-  public get iterator(): AsyncIterableIterator<T & HasId> {
+  public get iterator(): AsyncIterableIterator<T> {
     return this.modelIterator();
   }
 
-  public async all(): Promise<(T & HasId)[]> {
-    const records: (T & HasId)[] = [];
+  public async all(): Promise<T[]> {
+    const records: T[] = [];
     for await (const record of this.iterator) {
       records.push(record);
     }
     return records;
   }
 
-  public async first(): Promise<(T & HasId) | undefined> {
+  public async first(): Promise<T | undefined> {
     return (await this.all())[0];
   }
 }

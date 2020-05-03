@@ -53,7 +53,7 @@ test('save model instance', async () => {
     lastName: 'Gump',
   });
 
-  expect(user.id).toBeUndefined();
+  expect(user.id).toBe('');
   const savedUser = await user.save();
   expect(savedUser).toBe(user);
   expect(savedUser.id).not.toBeUndefined();
@@ -66,7 +66,7 @@ test('save frozen model instance', async () => {
     lastName: 'Gump',
   }).freeze();
 
-  expect(user.id).toBeUndefined();
+  expect(user.id).toBe('');
   const savedUser = await user.save();
   expect(savedUser).not.toBe(user);
   expect(savedUser.id).not.toBeUndefined();

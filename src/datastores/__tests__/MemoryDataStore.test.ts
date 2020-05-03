@@ -39,7 +39,7 @@ beforeEach(async () => {
 
 test('Saved model gets id', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
-  expect(car.id).toBeUndefined();
+  expect(car.id).toBe('');
   const savedCar = await car.save();
   expect(savedCar.id).not.toBeUndefined();
 });

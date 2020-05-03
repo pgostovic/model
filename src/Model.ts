@@ -13,8 +13,6 @@ export interface Data {
   [key: string]: Value | Value[];
 }
 
-export type HasId = { id: ModelId };
-
 const registeredClasses = new Map<string, typeof Model>();
 const fieldNamesByModel = new Map<Function, string[]>();
 
@@ -48,29 +46,29 @@ export class Model {
     return dropData(this);
   }
 
-  public static async find<T = Model>(id: ModelId): Promise<(T & HasId) | undefined> {
-    return find(this, id) as Promise<(T & HasId) | undefined>;
+  public static async find<T = Model>(id: ModelId): Promise<T | undefined> {
+    return find(this, id) as Promise<T | undefined>;
   }
 
-  @field public id?: ModelId;
+  @field public id: ModelId = '';
   public persistedData?: Data = undefined;
 
   constructor() {
     Object.defineProperty(this, 'persistedData', { value: undefined, writable: true, enumerable: false });
   }
 
-  public async save(): Promise<this & HasId> {
+  public async save(): Promise<this> {
     const saveOp = this.persistedData ? updateData : createData;
     const id = await saveOp(this.getClass(), this.toJS());
     if (Object.isFrozen(this)) {
       const clone = this.clone();
       clone.id = id;
       clone.persistedData = cloneDeep(this.getData());
-      return clone as this & HasId;
+      return clone as this;
     }
     this.id = id;
     this.persistedData = cloneDeep(this.getData());
-    return this as this & HasId;
+    return this;
   }
 
   private getData(): Data {
@@ -132,15 +130,12 @@ export const fromJS = <T extends Model>(js: Data, mClass?: typeof Model): T => {
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const find = async <T extends Model>(
-  c: { new (...args: never[]): T },
-  id: ModelId,
-): Promise<(T & HasId) | undefined> => {
+export const find = async <T extends Model>(c: { new (...args: never[]): T }, id: ModelId): Promise<T | undefined> => {
   const data = await findData((c as unknown) as typeof Model, id);
   if (data) {
     const result = fromJS({ ...data, _isPersisted_: true });
     if (result instanceof c) {
-      return result as T & HasId;
+      return result;
     }
   }
   return undefined;
