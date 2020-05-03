@@ -50,7 +50,7 @@ export class Model {
     return find(this, id) as Promise<T | undefined>;
   }
 
-  @field public id: ModelId = '';
+  @field public readonly id: ModelId = '';
   public persistedData?: Data = undefined;
 
   constructor() {
@@ -60,15 +60,12 @@ export class Model {
   public async save(): Promise<this> {
     const saveOp = this.persistedData ? updateData : createData;
     const id = await saveOp(this.getClass(), this.toJS());
-    if (Object.isFrozen(this)) {
-      const clone = this.clone();
-      clone.id = id;
-      clone.persistedData = cloneDeep(this.getData());
-      return clone as this;
-    }
-    this.id = id;
-    this.persistedData = cloneDeep(this.getData());
-    return this;
+
+    const model = new Model();
+    Object.assign(model, cloneDeep({ ...this.getData(), id }));
+    Object.setPrototypeOf(model, this.constructor.prototype);
+    model.persistedData = cloneDeep({ ...this.getData(), id });
+    return model as this;
   }
 
   private getData(): Data {
@@ -96,7 +93,7 @@ export class Model {
     const model = new Model();
     Object.assign(model, cloneDeep(this.getData()));
     Object.setPrototypeOf(model, this.constructor.prototype);
-    return (model as unknown) as this;
+    return model as this;
   }
 
   public freeze(): this {

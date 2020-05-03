@@ -55,8 +55,9 @@ test('save model instance', async () => {
 
   expect(user.id).toBe('');
   const savedUser = await user.save();
-  expect(savedUser).toBe(user);
-  expect(savedUser.id).not.toBeUndefined();
+  expect(user.id).toBe('');
+  expect(savedUser.id).not.toBe('');
+  expect(savedUser).toEqual({ ...user, id: savedUser.id });
 });
 
 test('save frozen model instance', async () => {
@@ -244,20 +245,6 @@ test('deep search', async () => {
     stuff: { foo: 43 },
   }).all();
   expect(bubba43s.length).toBe(0);
-});
-
-test('save new with id', async () => {
-  const bubba = new User({
-    email: 'bubba@cheese.com',
-    firstName: 'Bubba',
-    lastName: 'Cheese',
-  });
-  bubba.id = 'abcd1234';
-  bubba.stuff = { foo: 42 };
-  await bubba.save();
-
-  const foundUser = await find(User, bubba.id);
-  expect(foundUser).not.toBeUndefined();
 });
 
 test('datastore decorator', async () => {

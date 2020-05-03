@@ -75,13 +75,14 @@ test('serialize/deserialize persisted', async () => {
     lastName: 'Gump',
   });
 
-  await user.save();
+  const savedUser = await user.save();
 
-  const userJS = user.toJS();
+  const userJS = savedUser.toJS();
   const userFromJS = fromJS<User>(userJS);
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);
-  expect(userFromJS).toEqual(user);
+  expect(userFromJS).not.toBe(savedUser);
+  expect(userFromJS).toEqual(savedUser);
   expect(userFromJS.persistedData).not.toBeUndefined();
 });

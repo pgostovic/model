@@ -52,8 +52,6 @@ test('may mutate instance of model', () => {
   });
 
   expect(() => {
-    user.id = 'abcd1234';
-    expect(user.id).toBe('abcd1234');
     user.email = 'bubba@gump.com';
     expect(user.email).toBe('bubba@gump.com');
   }).not.toThrow();
