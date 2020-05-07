@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import cloneDeep from 'lodash.clonedeep';
-import md5 from 'md5';
 
 import Cursor from './Cursor';
 import { createData, dropData, findData, Options, Query, searchData, updateData } from './Datastore';
@@ -33,9 +32,9 @@ export class Model {
     return this.classNames[0];
   }
 
-  public static get cid(): string {
+  private static get cid(): string {
     const classNames = this.classNames;
-    return md5(classNames[classNames.length - 1]);
+    return classNames[classNames.length - 1];
   }
 
   public static register(): void {
@@ -59,8 +58,11 @@ export class Model {
 
   public async save(): Promise<this> {
     const saveOp = this.persistedData ? updateData : createData;
-    const id = await saveOp(this.getClass(), this.toJS());
-
+    const js = this.toJS();
+    const id = await saveOp(
+      this.getClass(),
+      Object.keys(js).reduce((data, k) => (k === '_isPersisted_' ? data : { ...data, [k]: js[k] }), {}),
+    );
     const model = new Model();
     Object.assign(model, cloneDeep({ ...this.getData(), id }));
     Object.setPrototypeOf(model, this.constructor.prototype);
@@ -83,7 +85,6 @@ export class Model {
   public toJS(): Data {
     return Object.freeze({
       ...this.clone().getData(),
-      _cid_: this.getClass().cid,
       _classes_: this.getClass().classNames,
       _isPersisted_: this.persistedData !== undefined,
     });
@@ -106,7 +107,8 @@ export class Model {
 }
 
 export const fromJS = <T extends Model>(js: Data, mClass?: typeof Model): T => {
-  const cid = js._cid_ as string;
+  const classes = js._classes_ as string[];
+  const cid = classes[classes.length - 1] as string;
   const isPersisted = js._isPersisted_ as boolean;
   const modelClass = mClass || registeredClasses.get(cid);
   if (modelClass) {
