@@ -65,7 +65,7 @@ test('serialize/deserialize', () => {
   expect(userFromJS.locations).not.toBe(user.locations);
   expect(userFromJS.locations).toEqual(user.locations);
   expect(userFromJS.seq).toEqual(user.seq);
-  expect(userFromJS.persistedData).toBeUndefined();
+  expect(userFromJS.persisted).toBeUndefined();
 });
 
 test('serialize/deserialize persisted', async () => {
@@ -84,5 +84,5 @@ test('serialize/deserialize persisted', async () => {
   expect(userFromJS).not.toBe(user);
   expect(userFromJS).not.toBe(savedUser);
   expect(userFromJS).toEqual(savedUser);
-  expect(userFromJS.persistedData).not.toBeUndefined();
+  expect(userFromJS.persisted).not.toBeUndefined();
 });

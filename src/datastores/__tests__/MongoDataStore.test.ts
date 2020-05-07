@@ -64,8 +64,8 @@ test('Retrieve by id, update', async () => {
 
     foundCar.colour = 'Yellow';
 
-    if (foundCar.persistedData) {
-      expect(foundCar.persistedData.colour).toBe('Willow');
+    if (foundCar.persisted) {
+      expect(foundCar.persisted.colour).toBe('Willow');
     } else {
       fail('foundCar.persistedData not present');
     }

@@ -1,5 +1,5 @@
 import { PersistObserver, PersistOperation } from './Datastore';
-import { Data, field, Model, search } from './Model';
+import { field, Model, ModelData, search } from './Model';
 
 enum AuditEventOperation {
   Create = 'create',
@@ -11,10 +11,10 @@ enum AuditEventOperation {
 class AuditEvent extends Model {
   @field public eventOperation: AuditEventOperation;
   @field public collectionName: string;
-  @field public data: Data;
+  @field public data: ModelData;
   @field public created = new Date();
 
-  public constructor(eventOperation: AuditEventOperation, collectionName: string, data: Data) {
+  public constructor(eventOperation: AuditEventOperation, collectionName: string, data: ModelData) {
     super();
     this.eventOperation = eventOperation;
     this.collectionName = collectionName;
@@ -36,14 +36,14 @@ const getEventOp = (op: PersistOperation): AuditEventOperation => {
 };
 
 class AuditLogger implements PersistObserver {
-  observe(op: PersistOperation, collectionName: string, data: Data): void {
+  observe(op: PersistOperation, collectionName: string, data: ModelData): void {
     if (collectionName !== 'AuditEvent') {
       new AuditEvent(getEventOp(op), collectionName, data).save();
     }
   }
 
-  async reconstruct(): Promise<{ [key: string]: Data[] }> {
-    const obj: { [key: string]: Data[] } = {};
+  async reconstruct(): Promise<{ [key: string]: ModelData[] }> {
+    const obj: { [key: string]: ModelData[] } = {};
 
     for await (const event of search(AuditEvent, {}).iterator) {
       const col = obj[event.collectionName] || [];

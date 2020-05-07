@@ -1,16 +1,16 @@
 import { DataStore, Query, SearchResult } from '../Datastore';
-import { Data, ModelId } from '../Model';
+import { ModelData, ModelId } from '../Model';
 
 export const noOpDataStore: DataStore = {
-  create: async (modelName: string, data: Data): Promise<ModelId> => {
+  create: async (modelName: string, data: ModelData): Promise<ModelId> => {
     throw new Error(`Operation not permitted in this context: save / ${modelName} / ${data}`);
   },
 
-  update: async (modelName: string, data: Data): Promise<ModelId> => {
+  update: async (modelName: string, data: ModelData): Promise<ModelId> => {
     throw new Error(`Operation not permitted in this context: save / ${modelName} / ${data}`);
   },
 
-  find: async (modelName: string, id: ModelId): Promise<Data | undefined> => {
+  find: async (modelName: string, id: ModelId): Promise<ModelData | undefined> => {
     throw new Error(`Operation not permitted in this context: find / ${modelName} / ${id}`);
   },
 

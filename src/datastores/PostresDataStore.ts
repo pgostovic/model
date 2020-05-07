@@ -2,7 +2,7 @@ import { createLogger } from '@phnq/log';
 
 // import { Client } from 'pg';
 import { DataStore, Options, Query, SearchResult } from '../Datastore';
-import { Data, ModelId } from '../Model';
+import { ModelData, ModelId } from '../Model';
 
 const log = createLogger('postgresDataStore');
 
@@ -15,17 +15,17 @@ export class PostgresDataStore implements DataStore {
     log('connUrl', this.connUrl);
   }
 
-  public async create(modelName: string, data: Data): Promise<ModelId> {
+  public async create(modelName: string, data: ModelData): Promise<ModelId> {
     log('save', modelName, data);
     throw new Error('Not yet');
   }
 
-  public async update(modelName: string, data: Data): Promise<ModelId> {
+  public async update(modelName: string, data: ModelData): Promise<ModelId> {
     log('save', modelName, data);
     throw new Error('Not yet');
   }
 
-  public async find(modelName: string, id: ModelId): Promise<Data | undefined> {
+  public async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
     log('find', modelName, id);
     throw new Error('Not yet');
   }

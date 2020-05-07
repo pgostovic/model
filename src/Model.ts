@@ -6,10 +6,9 @@ import { createData, dropData, findData, Options, Query, searchData, updateData 
 
 export type ModelId = string;
 
-export type Value = string | number | boolean | Date | Data | undefined;
-
-export interface Data {
-  [key: string]: Value | Value[];
+export interface ModelData {
+  id?: ModelId;
+  [key: string]: unknown;
 }
 
 const registeredClasses = new Map<string, typeof Model>();
@@ -50,14 +49,14 @@ export class Model {
   }
 
   @field public readonly id: ModelId = '';
-  public persistedData?: Data = undefined;
+  public persisted?: this = undefined;
 
   constructor() {
-    Object.defineProperty(this, 'persistedData', { value: undefined, writable: true, enumerable: false });
+    Object.defineProperty(this, 'persisted', { value: undefined, writable: true, enumerable: false });
   }
 
   public async save(): Promise<this> {
-    const saveOp = this.persistedData ? updateData : createData;
+    const saveOp = this.persisted ? updateData : createData;
     const js = this.toJS();
     const id = await saveOp(
       this.getClass(),
@@ -66,13 +65,13 @@ export class Model {
     const model = new Model();
     Object.assign(model, cloneDeep({ ...this.getData(), id }));
     Object.setPrototypeOf(model, this.constructor.prototype);
-    model.persistedData = cloneDeep({ ...this.getData(), id });
+    model.persisted = model.clone();
     return model as this;
   }
 
-  private getData(): Data {
+  private getData(): ModelData {
     const fieldNames = getFieldNames(this.getClass());
-    const data: Data = {};
+    const data: ModelData = {};
     fieldNames.forEach((key: string) => {
       const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
       if (value !== undefined) {
@@ -82,11 +81,11 @@ export class Model {
     return data;
   }
 
-  public toJS(): Data {
+  public toJS(): ModelData {
     return Object.freeze({
       ...this.clone().getData(),
       _classes_: this.getClass().classNames,
-      _isPersisted_: this.persistedData !== undefined,
+      _isPersisted_: this.persisted !== undefined,
     });
   }
 
@@ -106,13 +105,13 @@ export class Model {
   }
 }
 
-export const fromJS = <T extends Model>(js: Data, mClass?: typeof Model): T => {
+export const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
   const classes = js._classes_ as string[];
   const cid = classes[classes.length - 1] as string;
   const isPersisted = js._isPersisted_ as boolean;
   const modelClass = mClass || registeredClasses.get(cid);
   if (modelClass) {
-    const data: Data = {};
+    const data: ModelData = {};
     const fieldNames = getFieldNames(modelClass);
     fieldNames.forEach(name => {
       data[name] = js[name];
@@ -122,7 +121,7 @@ export const fromJS = <T extends Model>(js: Data, mClass?: typeof Model): T => {
     Object.assign(model, data);
     Object.setPrototypeOf(model, modelClass.prototype);
     if (isPersisted) {
-      model.persistedData = cloneDeep(data);
+      model.persisted = model.clone();
     }
     return model as T;
   }

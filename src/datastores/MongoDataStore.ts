@@ -2,11 +2,11 @@ import { createLogger } from '@phnq/log';
 import mongodb, { Cursor, FilterQuery, FindOneOptions, IndexOptions } from 'mongodb';
 
 import { DataStore, Options, Query, SearchResult } from '../Datastore';
-import { Data, ModelId } from '../Model';
+import { ModelData, ModelId } from '../Model';
 
 const log = createLogger('mongoDataStore');
 
-const mongify = (data: Data): Data | { _id?: mongodb.ObjectId } => {
+const mongify = (data: ModelData): ModelData | { _id?: mongodb.ObjectId } => {
   const id = data.id as string;
   if (id) {
     const dataCopy = { ...data, id, _id: new mongodb.ObjectId(id) };
@@ -19,12 +19,12 @@ const mongify = (data: Data): Data | { _id?: mongodb.ObjectId } => {
   }
 };
 
-const deMongify = (doc: Data | undefined): Data | undefined => {
+const deMongify = (doc: ModelData | undefined): ModelData | undefined => {
   if (doc && doc._id) {
-    const id = doc._id.toString();
+    const id = (doc._id as mongodb.ObjectId).toString();
     const docCopy = { ...doc, _id: undefined, id };
     delete docCopy._id;
-    return docCopy as Data;
+    return docCopy as ModelData;
   }
   return doc;
 };
@@ -37,12 +37,12 @@ export class MongoDataStore implements DataStore {
     this.connUrl = connUrl;
   }
 
-  public async create(modelName: string, data: Data): Promise<ModelId> {
+  public async create(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
     return String((await col.insertOne(mongify(data))).insertedId);
   }
 
-  public async update(modelName: string, data: Data): Promise<ModelId> {
+  public async update(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
     const id = data.id as ModelId;
     if (id) {
@@ -52,7 +52,7 @@ export class MongoDataStore implements DataStore {
     throw new Error('Must specify id to update a document');
   }
 
-  public async find(modelName: string, id: ModelId): Promise<Data | undefined> {
+  public async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
     const col = await this.collection(modelName);
     try {
       return deMongify((await col.findOne({ _id: new mongodb.ObjectId(id) })) || undefined);
