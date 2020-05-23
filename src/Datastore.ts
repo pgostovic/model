@@ -1,5 +1,9 @@
+import { createLogger } from '@phnq/log';
+
 import { noOpDataStore } from './datastores/noOpDataStore';
 import { Model, ModelData, ModelId } from './Model';
+
+const log = createLogger('DataStore');
 
 export type Query = unknown;
 export type Options = unknown;
@@ -28,6 +32,9 @@ export const datastore = (ds: DataStore) => (modelClass: any) => {
 let defaultDataStore: DataStore = noOpDataStore;
 
 export const setDefaultDataStore = (ds: DataStore): void => {
+  if (defaultDataStore && defaultDataStore !== ds) {
+    log.warn('Seems weird to call setDefaultDataStore() more than once. Are you sure you wanted that?');
+  }
   defaultDataStore = ds;
 };
 
