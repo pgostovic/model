@@ -26,7 +26,12 @@ const dataStoresByModel = new Map<typeof Model, DataStore>();
 
 // Decorator to mark a model's datastore
 export const datastore = (ds: DataStore) => (modelClass: any) => {
-  dataStoresByModel.set(modelClass, ds);
+  if (modelClass === modelClass.baseClass) {
+    dataStoresByModel.set(modelClass, ds);
+  } else {
+    throw new Error('Datastores may only be configured for immediate descendents of Model.');
+  }
+  return modelClass;
 };
 
 let defaultDataStore: DataStore = noOpDataStore;
@@ -39,7 +44,7 @@ export const setDefaultDataStore = (ds: DataStore): void => {
 };
 
 const getDataStore = (modelClass: typeof Model): DataStore => {
-  const ds = dataStoresByModel.get(modelClass) || defaultDataStore;
+  const ds = dataStoresByModel.get(modelClass.baseClass) || defaultDataStore;
   if (!ds) {
     throw new Error(`No datastore set for ${modelClass.collectionName}`);
   }

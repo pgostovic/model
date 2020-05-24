@@ -1,10 +1,9 @@
-import { setDefaultDataStore } from '../Datastore';
+import { datastore } from '../Datastore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { field, find, Model, search } from '../Model';
 
-setDefaultDataStore(memoryDataStore);
-
-class Animal extends Model {
+@datastore(memoryDataStore)
+abstract class Animal extends Model {
   @field public isAlive = true;
   @field public name: string;
 
@@ -46,24 +45,24 @@ beforeAll(async () => {
 });
 
 test('Find by class', async () => {
-  expect(await find(Animal, '1')).toBeDefined();
+  expect(await find(Animal.class, '1')).toBeDefined();
   expect(await find(Dog, '1')).toBeDefined();
   expect(await find(Pug, '1')).not.toBeDefined();
   expect(await find(Cat, '1')).not.toBeDefined();
 
-  expect(await find(Animal, '3')).toBeDefined();
+  expect(await find(Animal.class, '3')).toBeDefined();
   expect(await find(Dog, '3')).toBeDefined();
   expect(await find(Pug, '3')).toBeDefined();
   expect(await find(Cat, '3')).not.toBeDefined();
 
-  expect(await find(Animal, '4')).toBeDefined();
+  expect(await find(Animal.class, '4')).toBeDefined();
   expect(await find(Dog, '4')).not.toBeDefined();
   expect(await find(Pug, '4')).not.toBeDefined();
   expect(await find(Cat, '4')).toBeDefined();
 });
 
 test('Search by class', async () => {
-  expect((await search(Animal, { isAlive: true }).all()).length).toBe(4);
+  expect((await search(Animal.class, { isAlive: true }).all()).length).toBe(4);
   expect((await search(Dog, { isAlive: true }).all()).length).toBe(3);
   expect((await search(Pug, { isAlive: true }).all()).length).toBe(1);
   expect((await search(Cat, { isAlive: true }).all()).length).toBe(1);

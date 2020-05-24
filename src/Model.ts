@@ -22,8 +22,21 @@ export const field = (model: Model, key: string): void => {
 };
 
 export class Model {
+  public static get classes(): Array<typeof Model> {
+    return getClasses(this);
+  }
+
+  public static get class(): typeof Model {
+    const classes = this.classes;
+    return classes[classes.length - 1];
+  }
+
+  public static get baseClass(): typeof Model {
+    return this.classes[0];
+  }
+
   public static get classNames(): string[] {
-    return getClasses(this).map(c => c.name);
+    return this.classes.map(c => c.name);
   }
 
   public static get collectionName(): string {
@@ -42,10 +55,6 @@ export class Model {
 
   public static drop(): Promise<boolean> {
     return dropData(this);
-  }
-
-  public static async find<T = Model>(id: ModelId): Promise<T | undefined> {
-    return find(this, id) as Promise<T | undefined>;
   }
 
   @field public readonly id: ModelId = '';

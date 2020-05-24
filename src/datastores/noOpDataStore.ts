@@ -22,5 +22,6 @@ export const noOpDataStore: DataStore = {
     throw new Error(`Operation not permitted in this context: drop / ${modelName}`);
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   close: async () => {},
 };
