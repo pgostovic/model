@@ -151,9 +151,14 @@ export const find = async <T extends Model>(c: { new (...args: never[]): T }, id
 export const search = <T extends Model>(
   c: { new (...args: never[]): T },
   query: Query,
-  options: Options = undefined,
+  options?: Options,
 ): Cursor<T> => {
   const modelClass = (c as unknown) as typeof Model;
+
+  if (options && options.include) {
+    options.include = [...options.include, '_classes_', '_isPersisted_'];
+  }
+
   // TODO: Need to add class names to the query.
   return new Cursor<T>(searchData(modelClass, query, options), m => m.getClass().classNames.includes(modelClass.name));
 };

@@ -6,7 +6,19 @@ import { Model, ModelData, ModelId } from './Model';
 const log = createLogger('DataStore');
 
 export type Query = unknown;
-export type Options = unknown;
+// export type Options = unknown;
+export interface Options {
+  /** Fields to include in results -- include all by default */
+  include?: string[];
+  /** Fields to exclude in results -- exclude none by default */
+  exclude?: string[];
+  /** Sort criteria -- list of fields (minus prefix for descending) */
+  sort?: string[];
+  /** Max number of results to return */
+  limit?: number;
+  /** Pagination offset */
+  offset?: number;
+}
 
 export interface SearchResult {
   count: Promise<number>;
@@ -17,7 +29,7 @@ export interface DataStore {
   create(modelName: string, data: ModelData): Promise<ModelId>;
   update(modelName: string, data: ModelData): Promise<ModelId>;
   find(modelName: string, id: ModelId): Promise<ModelData | undefined>;
-  search(modelName: string, query: Query, options: Options): SearchResult;
+  search(modelName: string, query: Query, options?: Options): SearchResult;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
 }
@@ -85,7 +97,7 @@ export const updateData = async (modelClass: typeof Model, data: ModelData): Pro
 export const findData = (modelClass: typeof Model, id: ModelId): Promise<ModelData | undefined> =>
   getDataStore(modelClass).find(modelClass.collectionName, id);
 
-export const searchData = (modelClass: typeof Model, query: Query, options: Options): SearchResult =>
+export const searchData = (modelClass: typeof Model, query: Query, options?: Options): SearchResult =>
   getDataStore(modelClass).search(modelClass.collectionName, query, options);
 
 export const dropData = async (modelClass: typeof Model): Promise<boolean> => {

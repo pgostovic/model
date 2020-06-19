@@ -8,7 +8,7 @@ enum AuditEventOperation {
   Drop = 'drop',
 }
 
-class AuditEvent extends Model {
+export class AuditEvent extends Model {
   @field public eventOperation: AuditEventOperation;
   @field public collectionName: string;
   @field public data: ModelData;

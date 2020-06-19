@@ -139,6 +139,46 @@ test('Search cursor count', async () => {
   expect(await blackCarsCursor.count).toBe(2);
 });
 
+test('Sort by sub attribute', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  car1.stuff = { foo: 1, bar: 10 };
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  car2.stuff = { foo: 2, bar: 5 };
+  const car3 = new Car({ make: 'Volvo', model: 'XC-50', colour: 'Red' });
+  car3.stuff = { foo: 3, bar: 8 };
+  await car1.save();
+  await car2.save();
+  await car3.save();
+
+  const volvos = search(Car, { make: 'Volvo' }, { sort: ['stuff.bar'] });
+  expect((await volvos.all()).map(({ model }) => model)).toEqual(['XC-70', 'XC-50', 'XC-90']);
+
+  const volvosDesc = search(Car, { make: 'Volvo' }, { sort: ['-stuff.foo'] });
+  expect((await volvosDesc.all()).map(({ model }) => model)).toEqual(['XC-50', 'XC-70', 'XC-90']);
+});
+
+test('Include/exclude fields', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  car1.stuff = { foo: 1, bar: 10 };
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  car2.stuff = { foo: 2, bar: 5 };
+  const car3 = new Car({ make: 'Volvo', model: 'XC-50', colour: 'Red' });
+  car3.stuff = { foo: 3, bar: 8 };
+  await car1.save();
+  await car2.save();
+  await car3.save();
+
+  const volvos1 = await search(Car, { make: 'Volvo' }, { include: ['colour'] }).all();
+  expect(volvos1.map(({ make }) => make).filter(Boolean)).toEqual([]);
+  expect(volvos1.map(({ model }) => model).filter(Boolean)).toEqual([]);
+  expect(volvos1.map(({ stuff }) => stuff).filter(Boolean)).toEqual([]);
+  expect(volvos1.map(({ colour }) => colour).filter(Boolean)).toEqual(['Willow', 'Black', 'Red']);
+
+  const volvos2 = await search(Car, { make: 'Volvo' }, { exclude: ['colour'] }).all();
+  expect(volvos2.map(({ colour }) => colour).filter(Boolean)).toEqual([]);
+  expect(volvos2.map(({ model }) => model).filter(Boolean)).toEqual(['XC-90', 'XC-70', 'XC-50']);
+});
+
 afterAll(async () => {
   await mongoDataStore.close();
 });

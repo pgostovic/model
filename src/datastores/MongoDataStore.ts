@@ -62,10 +62,10 @@ export class MongoDataStore implements DataStore {
     }
   }
 
-  public search(modelName: string, query: Query, options: Options): SearchResult {
+  public search(modelName: string, query: Query, options?: Options): SearchResult {
     const cursorPromise = (async (): Promise<Cursor> => {
       const col = await this.collection(modelName);
-      return col.find(query as FilterQuery<unknown>, options as FindOneOptions);
+      return col.find(query as FilterQuery<unknown>, toMongoFindOptions(options));
     })();
 
     return {
@@ -119,3 +119,39 @@ export class MongoDataStore implements DataStore {
     return this.client;
   }
 }
+
+const toMongoFindOptions = (options?: Options): FindOneOptions | undefined => {
+  if (options) {
+    const { include = [], exclude = [], sort = [], limit, offset } = options;
+    const mongoOptions: FindOneOptions = {};
+
+    if (include.length + exclude.length > 0) {
+      mongoOptions.projection = {};
+      [...include, ...exclude].forEach(f => {
+        mongoOptions.projection = { ...mongoOptions.projection, [f]: include.includes(f) ? 1 : 0 };
+      });
+    }
+
+    if (sort.length > 0) {
+      mongoOptions.sort = sort.map(s => {
+        const m = s.match(/([+-]?)(.*)/);
+        if (m) {
+          const desc = m[1] === '-';
+          const field = m[2];
+          return [field, desc ? -1 : 1];
+        }
+      });
+    }
+
+    if (limit !== undefined) {
+      mongoOptions.limit = limit;
+    }
+
+    if (offset !== undefined) {
+      mongoOptions.skip = offset;
+    }
+
+    return mongoOptions;
+  }
+  return undefined;
+};

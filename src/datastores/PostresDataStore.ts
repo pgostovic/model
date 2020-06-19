@@ -30,7 +30,7 @@ export class PostgresDataStore implements DataStore {
     throw new Error('Not yet');
   }
 
-  public search(modelName: string, query: Query, options: Options): SearchResult {
+  public search(modelName: string, query: Query, options?: Options): SearchResult {
     log('search', modelName, query, options);
     throw new Error('Not yet');
   }
