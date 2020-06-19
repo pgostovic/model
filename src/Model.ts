@@ -137,8 +137,16 @@ export const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T
   throw new Error(`No model class registered for id: ${cid}`);
 };
 
-export const find = async <T extends Model>(c: { new (...args: never[]): T }, id: ModelId): Promise<T | undefined> => {
-  const data = await findData((c as unknown) as typeof Model, id);
+export const find = async <T extends Model>(
+  c: { new (...args: never[]): T },
+  id: ModelId,
+  options?: Options,
+): Promise<T | undefined> => {
+  if (options && options.include) {
+    options.include = [...options.include, '_classes_', '_isPersisted_'];
+  }
+
+  const data = await findData((c as unknown) as typeof Model, id, options);
   if (data) {
     const result = fromJS({ ...data, _isPersisted_: true });
     if (result instanceof c) {

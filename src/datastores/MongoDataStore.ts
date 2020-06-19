@@ -52,10 +52,12 @@ export class MongoDataStore implements DataStore {
     throw new Error('Must specify id to update a document');
   }
 
-  public async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
+  public async find(modelName: string, id: ModelId, options?: Options): Promise<ModelData | undefined> {
     const col = await this.collection(modelName);
     try {
-      return deMongify((await col.findOne({ _id: new mongodb.ObjectId(id) })) || undefined);
+      return deMongify(
+        (await col.findOne({ _id: new mongodb.ObjectId(id) }, toMongoFindOptions(options))) || undefined,
+      );
     } catch (err) {
       log('Error finding document', err);
       return undefined;

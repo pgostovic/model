@@ -139,7 +139,7 @@ test('Search cursor count', async () => {
   expect(await blackCarsCursor.count).toBe(2);
 });
 
-test('Sort by sub attribute', async () => {
+test('Search sort by sub attribute', async () => {
   const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   car1.stuff = { foo: 1, bar: 10 };
   const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
@@ -157,7 +157,7 @@ test('Sort by sub attribute', async () => {
   expect((await volvosDesc.all()).map(({ model }) => model)).toEqual(['XC-50', 'XC-70', 'XC-90']);
 });
 
-test('Include/exclude fields', async () => {
+test('Search include/exclude fields', async () => {
   const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   car1.stuff = { foo: 1, bar: 10 };
   const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
@@ -177,6 +177,32 @@ test('Include/exclude fields', async () => {
   const volvos2 = await search(Car, { make: 'Volvo' }, { exclude: ['colour'] }).all();
   expect(volvos2.map(({ colour }) => colour).filter(Boolean)).toEqual([]);
   expect(volvos2.map(({ model }) => model).filter(Boolean)).toEqual(['XC-90', 'XC-70', 'XC-50']);
+});
+
+test('Find include/exclude fields', async () => {
+  const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  car.stuff = { foo: 1, bar: 10 };
+  const savedCar = await car.save();
+
+  const foundCar1 = await find(Car, savedCar.id, { include: ['colour'] });
+  if (foundCar1) {
+    expect(foundCar1.colour).toBe('Willow');
+    expect(foundCar1.make).toBeUndefined();
+    expect(foundCar1.model).toBeUndefined();
+    expect(foundCar1.stuff).toBeUndefined();
+  } else {
+    fail('Not found');
+  }
+
+  const foundCar2 = await find(Car, savedCar.id, { exclude: ['colour'] });
+  if (foundCar2) {
+    expect(foundCar2.colour).toBeUndefined();
+    expect(foundCar2.make).toBe('Volvo');
+    expect(foundCar2.model).toBe('XC-90');
+    expect(foundCar2.stuff).toEqual({ foo: 1, bar: 10 });
+  } else {
+    fail('Not found');
+  }
 });
 
 afterAll(async () => {

@@ -28,7 +28,7 @@ export interface SearchResult {
 export interface DataStore {
   create(modelName: string, data: ModelData): Promise<ModelId>;
   update(modelName: string, data: ModelData): Promise<ModelId>;
-  find(modelName: string, id: ModelId): Promise<ModelData | undefined>;
+  find(modelName: string, id: ModelId, options?: Options): Promise<ModelData | undefined>;
   search(modelName: string, query: Query, options?: Options): SearchResult;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
@@ -94,8 +94,8 @@ export const updateData = async (modelClass: typeof Model, data: ModelData): Pro
   return id;
 };
 
-export const findData = (modelClass: typeof Model, id: ModelId): Promise<ModelData | undefined> =>
-  getDataStore(modelClass).find(modelClass.collectionName, id);
+export const findData = (modelClass: typeof Model, id: ModelId, options?: Options): Promise<ModelData | undefined> =>
+  getDataStore(modelClass).find(modelClass.collectionName, id, options);
 
 export const searchData = (modelClass: typeof Model, query: Query, options?: Options): SearchResult =>
   getDataStore(modelClass).search(modelClass.collectionName, query, options);
