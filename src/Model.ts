@@ -59,9 +59,11 @@ export class Model {
 
   @field public readonly id: ModelId = '';
   public persisted?: this = undefined;
+  public _classes_: string[] = [];
 
   constructor() {
     Object.defineProperty(this, 'persisted', { value: undefined, writable: true, enumerable: false });
+    Object.defineProperty(this, '_classes_', { enumerable: true, get: () => this.getClass().classNames });
   }
 
   public async save(): Promise<this> {
@@ -93,7 +95,7 @@ export class Model {
   public toJS(): ModelData {
     return Object.freeze({
       ...this.clone().getData(),
-      _classes_: this.getClass().classNames,
+      _classes_: this._classes_,
       _isPersisted_: this.persisted !== undefined,
     });
   }
