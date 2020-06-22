@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import { createLogger } from '@phnq/log';
 import cloneDeep from 'lodash.clonedeep';
 
 import Cursor from './Cursor';
 import { createData, dropData, findData, Options, Query, searchData, updateData } from './Datastore';
+
+const log = createLogger('Model');
 
 export type ModelId = string;
 
@@ -211,14 +214,18 @@ const parse = (val: unknown): unknown => {
   } else if (val && typeof val === 'object') {
     const md = val as ModelData;
     if (md._classes_) {
-      return fromJS(md);
-    } else {
-      const obj: { [index: string]: unknown } = {};
-      Object.keys(md).forEach((k: string) => {
-        obj[k] = parse(md[k]);
-      });
-      return obj;
+      try {
+        return fromJS(md);
+      } catch (err) {
+        const className = [...(md._classes_ as string[])].pop();
+        log.warn(`Unable to unmarshal instance of Model class: ${className}`);
+      }
     }
+    const obj: { [index: string]: unknown } = {};
+    Object.keys(md).forEach((k: string) => {
+      obj[k] = parse(md[k]);
+    });
+    return obj;
   }
   return val;
 };
