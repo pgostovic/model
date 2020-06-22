@@ -57,6 +57,10 @@ export class Model {
     return dropData(this);
   }
 
+  public static parse<T = unknown>(val: unknown): T {
+    return parse(val) as T;
+  }
+
   @field public readonly id: ModelId = '';
   public persisted?: this = undefined;
   public _classes_: string[] = [];
@@ -199,4 +203,22 @@ const getClasses = (concreteModelClass: typeof Model): Array<typeof Model> => {
   } while (modelClass && modelClass !== Model);
   classes.reverse();
   return classes;
+};
+
+const parse = (val: unknown): unknown => {
+  if (val instanceof Array) {
+    return (val as unknown[]).map(parse);
+  } else if (val && typeof val === 'object') {
+    const md = val as ModelData;
+    if (md._classes_) {
+      return fromJS(md);
+    } else {
+      const obj: { [index: string]: unknown } = {};
+      Object.keys(md).forEach((k: string) => {
+        obj[k] = parse(md[k]);
+      });
+      return obj;
+    }
+  }
+  return val;
 };

@@ -119,3 +119,47 @@ test('serialize/deserialize JSON', () => {
   expect(userFromJS.seq).toEqual(user.seq);
   expect(userFromJS.persisted).toBeUndefined();
 });
+
+test('serialize/deserialize embedded JSON', () => {
+  const user = new User({
+    email: 'bubba@gump.com',
+    firstName: 'Bubba',
+    lastName: 'Gump',
+  });
+
+  user.locations.push({
+    name: 'home',
+    street: '123 Orchard Ave.',
+    city: 'Toronto',
+    province: 'Ontario',
+  });
+
+  user.locations.push({
+    name: 'work',
+    street: '555 Main St.',
+    city: 'Toronto',
+    province: 'Ontario',
+  });
+
+  const obj = {
+    theStuff: {
+      users: [42, user, 'hello'],
+    },
+  };
+
+  const objJSON = JSON.stringify(obj);
+
+  const parsed = Model.parse<{ theStuff: { users: [number, User, string] } }>(JSON.parse(objJSON));
+
+  expect(parsed.theStuff.users[0]).toBe(42);
+  expect(parsed.theStuff.users[2]).toBe('hello');
+
+  const userFromJS = parsed.theStuff.users[1];
+  expect(userFromJS).toBeInstanceOf(User);
+  expect(userFromJS).not.toBe(user);
+  expect(userFromJS).toEqual(user);
+  expect(userFromJS.locations).not.toBe(user.locations);
+  expect(userFromJS.locations).toEqual(user.locations);
+  expect(userFromJS.seq).toEqual(user.seq);
+  expect(userFromJS.persisted).toBeUndefined();
+});
