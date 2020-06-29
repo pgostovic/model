@@ -55,7 +55,7 @@ class AuditLogger implements PersistObserver {
           break;
 
         case AuditEventOperation.Update: {
-          const data = col.find(d => d.id === event.data.id);
+          const data = col.find(d => d.id.equals(event.data.id));
           if (data) {
             Object.assign(data, event.data);
           } else {
@@ -65,7 +65,7 @@ class AuditLogger implements PersistObserver {
         }
 
         case AuditEventOperation.Delete:
-          obj[event.collectionName] = col.filter(data => data.id !== event.data.id);
+          obj[event.collectionName] = col.filter(data => !data.id.equals(event.data.id));
           break;
 
         case AuditEventOperation.Drop:

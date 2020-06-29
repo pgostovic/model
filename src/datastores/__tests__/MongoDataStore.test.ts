@@ -1,4 +1,6 @@
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
+import { ModelId } from '../../Model';
+import { qField } from '../../Query';
 import { MongoDataStore } from '../MongoDataStore';
 
 const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
@@ -37,16 +39,16 @@ test('Drop non-existent collection', async () => {
 });
 
 test('Find by bad format id returns undefined', async () => {
-  expect(await find(Car, 'nope')).toBeUndefined();
+  expect(await find(Car, new ModelId('nope'))).toBeUndefined();
 });
 
 test('Find by non-existent id returns undefined', async () => {
-  expect(await find(Car, 'abcdef123456')).toBeUndefined();
+  expect(await find(Car, new ModelId('abcdef123456'))).toBeUndefined();
 });
 
 test('Saved model gets id', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
-  expect(car.id).toBe('');
+  expect(car.id).toBe(ModelId.Empty);
   const savedCar = await car.save();
   expect(savedCar.id).not.toBeUndefined();
 });
@@ -58,9 +60,10 @@ test('Retrieve by id, update', async () => {
     fail('Id not assigned on save');
     return;
   }
+
   const foundCar = await find(Car, savedCar.id);
   if (foundCar) {
-    expect(foundCar.id).toBe(savedCar.id);
+    expect(foundCar.id).toEqual(savedCar.id);
 
     foundCar.colour = 'Yellow';
 
@@ -87,7 +90,7 @@ test('Search by attribute', async () => {
   await car2.save();
   await car3.save();
 
-  const volvos = await search(Car, { make: 'Volvo' }).all();
+  const volvos = await search(Car, qField('make').eq('Volvo')).all();
   expect(volvos.length).toBe(2);
 
   const blackCars = await search(Car, { colour: 'Black' }).all();
@@ -137,6 +140,19 @@ test('Search cursor count', async () => {
   const blackCarsCursor = search(Car, { colour: 'Black' });
   expect((await blackCarsCursor.all()).length).toBe(2);
   expect(await blackCarsCursor.count).toBe(2);
+});
+
+test('Search with query builder', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  const car3 = new Car({ make: 'Honda', model: 'Accord', colour: 'Black' });
+  const savedCar1 = await car1.save();
+  const savedCar2 = await car2.save();
+  const savedCar3 = await car3.save();
+
+  const nonVolvos = search(Car, qField('id').nin([savedCar1.id, savedCar2.id]));
+  expect(await nonVolvos.count).toBe(1);
+  expect((await nonVolvos.all())[0].id).toEqual(savedCar3.id);
 });
 
 test('Search sort by sub attribute', async () => {

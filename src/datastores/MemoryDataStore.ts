@@ -1,7 +1,8 @@
 import { createLogger } from '@phnq/log';
 
-import { DataStore, Query, SearchResult } from '../Datastore';
+import { DataStore, SearchResult } from '../Datastore';
 import { ModelData, ModelId } from '../Model';
+import Query from '../Query';
 
 const log = createLogger('memoryDataStore');
 
@@ -20,12 +21,12 @@ const dataId = (function* messageIdGen() {
 })();
 
 const formatDotQuery = (dotQuery: string, value: unknown): ModelData => {
-  const formattedQuery: ModelData = {};
+  const formattedQuery: ModelData = { id: ModelId.Empty };
   let q = formattedQuery;
   const comps = dotQuery.split('.');
   const last = comps.splice(-1)[0];
   comps.forEach(comp => {
-    q = q[comp] = {};
+    q = q[comp] = { id: ModelId.Empty };
   });
   q[last] = value;
   return formattedQuery;
@@ -69,12 +70,12 @@ export const logCollections = (): void => {
 
 class MemoryDataStore implements DataStore {
   async save(modelName: string, data: ModelData): Promise<ModelId> {
-    const id = (data.id as string) || dataId.next().value;
-    const records = getCollection(modelName).filter(record => record.id !== id);
-    const newRecord = { ...data, id };
+    const id = data.id.toString() || dataId.next().value;
+    const records = getCollection(modelName).filter(record => record.id.toString() !== id);
+    const newRecord = { ...data, id: new ModelId(id) };
     collections.set(modelName, [...records, newRecord]);
     log(`SAVE - ${modelName}(${id})`);
-    return id;
+    return new ModelId(id);
   }
 
   create(modelName: string, data: ModelData): Promise<ModelId> {
@@ -86,7 +87,7 @@ class MemoryDataStore implements DataStore {
   }
 
   async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
-    const record = getCollection(modelName).find(r => r.id === id);
+    const record = getCollection(modelName).find(r => r.id.equals(id));
     log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);
     return record;
   }

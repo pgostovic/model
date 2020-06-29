@@ -1,19 +1,20 @@
 import { createLogger } from '@phnq/log';
 import mongodb, { Cursor, FilterQuery, FindOneOptions, IndexOptions } from 'mongodb';
 
-import { DataStore, Options, Query, SearchResult } from '../Datastore';
+import { DataStore, Options, SearchResult } from '../Datastore';
 import { ModelData, ModelId } from '../Model';
+import Query from '../Query';
 
 const log = createLogger('mongoDataStore');
 
 const mongify = (data: ModelData): ModelData | { _id?: mongodb.ObjectId } => {
-  const id = data.id as string;
-  if (id) {
-    const dataCopy = { ...data, id, _id: new mongodb.ObjectId(id) };
+  const id = data.id;
+  if (id === ModelId.Empty) {
+    const dataCopy = { ...data };
     delete dataCopy.id;
     return dataCopy;
   } else {
-    const dataCopy = { ...data };
+    const dataCopy = { ...data, id, _id: new mongodb.ObjectId(id.toString()) };
     delete dataCopy.id;
     return dataCopy;
   }
@@ -21,7 +22,7 @@ const mongify = (data: ModelData): ModelData | { _id?: mongodb.ObjectId } => {
 
 const deMongify = (doc: ModelData | undefined): ModelData | undefined => {
   if (doc && doc._id) {
-    const id = (doc._id as mongodb.ObjectId).toString();
+    const id = new ModelId((doc._id as mongodb.ObjectId).toString());
     const docCopy = { ...doc, _id: undefined, id };
     delete docCopy._id;
     return docCopy as ModelData;
@@ -39,14 +40,14 @@ export class MongoDataStore implements DataStore {
 
   public async create(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
-    return String((await col.insertOne(mongify(data))).insertedId);
+    return new ModelId((await col.insertOne(mongify(data))).insertedId);
   }
 
   public async update(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
-    const id = data.id as ModelId;
+    const id = data.id;
     if (id) {
-      await col.updateOne({ _id: new mongodb.ObjectId(id) }, { $set: mongify(data) });
+      await col.updateOne({ _id: new mongodb.ObjectId(id.toString()) }, { $set: mongify(data) });
       return id;
     }
     throw new Error('Must specify id to update a document');
@@ -56,7 +57,7 @@ export class MongoDataStore implements DataStore {
     const col = await this.collection(modelName);
     try {
       return deMongify(
-        (await col.findOne({ _id: new mongodb.ObjectId(id) }, toMongoFindOptions(options))) || undefined,
+        (await col.findOne({ _id: new mongodb.ObjectId(id.toString()) }, toMongoFindOptions(options))) || undefined,
       );
     } catch (err) {
       log('Error finding document', err);
@@ -67,7 +68,7 @@ export class MongoDataStore implements DataStore {
   public search(modelName: string, query: Query, options?: Options): SearchResult {
     const cursorPromise = (async (): Promise<Cursor> => {
       const col = await this.collection(modelName);
-      return col.find(query as FilterQuery<unknown>, toMongoFindOptions(options));
+      return col.find(toMongoQuery(query) as FilterQuery<unknown>, toMongoFindOptions(options));
     })();
 
     return {
@@ -121,6 +122,22 @@ export class MongoDataStore implements DataStore {
     return this.client;
   }
 }
+
+const toMongoQuery = (val: unknown): unknown => {
+  if (val instanceof ModelId) {
+    return new mongodb.ObjectId(val.toString());
+  } else if (val instanceof Array) {
+    return (val as unknown[]).map(toMongoQuery);
+  } else if (val && typeof val === 'object') {
+    const valObj = val as { [index: string]: unknown };
+    const obj: { [index: string]: unknown } = {};
+    Object.keys(valObj).forEach((k: string) => {
+      obj[k === 'id' ? '_id' : k] = toMongoQuery(valObj[k]);
+    });
+    return obj;
+  }
+  return val;
+};
 
 const toMongoFindOptions = (options?: Options): FindOneOptions | undefined => {
   if (options) {

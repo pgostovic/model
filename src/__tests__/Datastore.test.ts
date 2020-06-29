@@ -3,6 +3,7 @@ import { addPersistObserver } from '../Datastore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { noOpDataStore } from '../datastores/noOpDataStore';
 import { datastore, field, find, Model, search, setDefaultDataStore } from '../index';
+import { ModelId } from '../Model';
 
 const auditLogger = new AuditLogger();
 addPersistObserver(auditLogger);
@@ -53,9 +54,9 @@ test('save model instance', async () => {
     lastName: 'Gump',
   });
 
-  expect(user.id).toBe('');
+  expect(user.id).toBe(ModelId.Empty);
   const savedUser = await user.save();
-  expect(user.id).toBe('');
+  expect(user.id).toBe(ModelId.Empty);
   expect(savedUser.id).not.toBe('');
   expect(savedUser).toEqual({ ...user, id: savedUser.id });
 });
@@ -67,7 +68,7 @@ test('save frozen model instance', async () => {
     lastName: 'Gump',
   }).freeze();
 
-  expect(user.id).toBe('');
+  expect(user.id).toBe(ModelId.Empty);
   const savedUser = await user.save();
   expect(savedUser).not.toBe(user);
   expect(savedUser.id).not.toBeUndefined();

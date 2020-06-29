@@ -3,14 +3,31 @@ import { createLogger } from '@phnq/log';
 import cloneDeep from 'lodash.clonedeep';
 
 import Cursor from './Cursor';
-import { createData, dropData, findData, Options, Query, searchData, updateData } from './Datastore';
+import { createData, dropData, findData, Options, searchData, updateData } from './Datastore';
+import { QueryType } from './Query';
 
 const log = createLogger('Model');
 
-export type ModelId = string;
+export class ModelId {
+  public static readonly Empty = new ModelId('');
+
+  private id: string;
+
+  public constructor(id: string | number) {
+    this.id = String(id);
+  }
+
+  public toString(): string {
+    return this.id;
+  }
+
+  public equals(id: ModelId): boolean {
+    return this.id === id.toString();
+  }
+}
 
 export interface ModelData {
-  id?: ModelId;
+  id: ModelId;
   [key: string]: unknown;
 }
 
@@ -64,7 +81,7 @@ export class Model {
     return parse(val) as T;
   }
 
-  @field public readonly id: ModelId = '';
+  @field public readonly id = ModelId.Empty;
   public persisted?: this = undefined;
   public _classes_: string[] = [];
 
@@ -78,7 +95,7 @@ export class Model {
     const js = this.toJS();
     const id = await saveOp(
       this.getClass(),
-      Object.keys(js).reduce((data, k) => (k === '_isPersisted_' ? data : { ...data, [k]: js[k] }), {}),
+      Object.keys(js).reduce((data, k) => (k === '_isPersisted_' ? data : { ...data, [k]: js[k] }), { id: this.id }),
     );
     const model = new Model();
     Object.assign(model, cloneDeep({ ...this.getData(), id }));
@@ -89,7 +106,7 @@ export class Model {
 
   private getData(): ModelData {
     const fieldNames = getFieldNames(this.getClass());
-    const data: ModelData = {};
+    const data: ModelData = { id: this.id };
     fieldNames.forEach((key: string) => {
       const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
       if (value !== undefined) {
@@ -109,7 +126,12 @@ export class Model {
 
   public clone(): this {
     const model = new Model();
-    Object.assign(model, cloneDeep(this.getData()));
+    const dataClone = cloneDeep(this.getData());
+    if (dataClone.id.toString() === '') {
+      // Make sure the empty id is always ModelId.Empty.
+      dataClone.id = ModelId.Empty;
+    }
+    Object.assign(model, dataClone);
     Object.setPrototypeOf(model, this.constructor.prototype);
     return model as this;
   }
@@ -129,7 +151,7 @@ export const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T
   const isPersisted = js._isPersisted_ as boolean;
   const modelClass = mClass || registeredClasses.get(cid);
   if (modelClass) {
-    const data: ModelData = {};
+    const data: ModelData = { id: ModelId.Empty };
     const fieldNames = getFieldNames(modelClass);
     fieldNames.forEach(name => {
       data[name] = js[name];
@@ -167,7 +189,7 @@ export const find = async <T extends Model>(
 
 export const search = <T extends Model>(
   c: { new (...args: never[]): T },
-  query: Query,
+  query: QueryType,
   options?: Options,
 ): Cursor<T> => {
   const modelClass = (c as unknown) as typeof Model;

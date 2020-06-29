@@ -1,6 +1,7 @@
 import AuditLogger from '../../AuditLogger';
 import { addPersistObserver } from '../../Datastore';
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
+import { ModelId } from '../../Model';
 import { memoryDataStore } from '../MemoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
@@ -39,7 +40,7 @@ beforeEach(async () => {
 
 test('Saved model gets id', async () => {
   const car = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
-  expect(car.id).toBe('');
+  expect(car.id).toBe(ModelId.Empty);
   const savedCar = await car.save();
   expect(savedCar.id).not.toBeUndefined();
 });
@@ -54,7 +55,7 @@ test('Retrieve by id, update', async () => {
 
   const foundCar = await find(Car, savedCar.id);
   if (foundCar) {
-    expect(foundCar.id).toBe(savedCar.id);
+    expect(foundCar.id).toEqual(savedCar.id);
 
     foundCar.colour = 'Yellow';
     await foundCar.save();

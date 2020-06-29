@@ -2,11 +2,10 @@ import { createLogger } from '@phnq/log';
 
 import { noOpDataStore } from './datastores/noOpDataStore';
 import { Model, ModelData, ModelId } from './Model';
+import Query, { qSerialize, QueryType } from './Query';
 
 const log = createLogger('DataStore');
 
-export type Query = unknown;
-// export type Options = unknown;
 export interface Options {
   /** Fields to include in results -- include all by default */
   include?: string[];
@@ -97,12 +96,12 @@ export const updateData = async (modelClass: typeof Model, data: ModelData): Pro
 export const findData = (modelClass: typeof Model, id: ModelId, options?: Options): Promise<ModelData | undefined> =>
   getDataStore(modelClass).find(modelClass.collectionName, id, options);
 
-export const searchData = (modelClass: typeof Model, query: Query, options?: Options): SearchResult =>
-  getDataStore(modelClass).search(modelClass.collectionName, query, options);
+export const searchData = (modelClass: typeof Model, query: QueryType, options?: Options): SearchResult =>
+  getDataStore(modelClass).search(modelClass.collectionName, qSerialize(query), options);
 
 export const dropData = async (modelClass: typeof Model): Promise<boolean> => {
   const collectionName = modelClass.collectionName;
   const dropped = await getDataStore(modelClass).drop(collectionName);
-  observers.forEach(observer => observer.observe(PersistOperation.Drop, collectionName, {}));
+  observers.forEach(observer => observer.observe(PersistOperation.Drop, collectionName, { id: ModelId.Empty }));
   return dropped;
 };
