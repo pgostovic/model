@@ -1,8 +1,9 @@
 import { createLogger } from '@phnq/log';
 
 // import { Client } from 'pg';
-import { DataStore, Options, Query, SearchResult } from '../Datastore';
+import { DataStore, Options, SearchResult } from '../Datastore';
 import { ModelData, ModelId } from '../Model';
+import Query from '../Query';
 
 const log = createLogger('postgresDataStore');
 

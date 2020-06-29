@@ -1,4 +1,5 @@
 import { setDefaultDataStore } from '../../index';
+import { ModelId } from '../../Model';
 import { PostgresDataStore } from '../PostresDataStore';
 
 const postgresDataStore = new PostgresDataStore(
@@ -11,25 +12,25 @@ test('temp coverage', async () => {
   const ds = new PostgresDataStore('the url');
 
   try {
-    await ds.create('model', {});
+    await ds.create('model', { id: ModelId.Empty });
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
   }
 
   try {
-    await ds.update('model', {});
+    await ds.update('model', { id: ModelId.Empty });
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
   }
 
   try {
-    await ds.find('model', 'id');
+    await ds.find('model', new ModelId('id'));
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
   }
 
   try {
-    await ds.search('model', 'q', undefined);
+    await ds.search('model', {}, undefined);
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
   }

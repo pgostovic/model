@@ -1,5 +1,6 @@
 import { noOpDataStore } from '../datastores/noOpDataStore';
 import { field, find, Model, search } from '../index';
+import { ModelId } from '../Model';
 
 class User extends Model {
   @field public email?: string;
@@ -31,7 +32,7 @@ test('save model instance throws on client', async () => {
 
 test('update throws', async () => {
   try {
-    await noOpDataStore.update('name', {});
+    await noOpDataStore.update('name', { id: ModelId.Empty });
     fail('Should have thrown');
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
@@ -40,7 +41,7 @@ test('update throws', async () => {
 
 test('find model instance throws on client', async () => {
   try {
-    await find(User, 'some id');
+    await find(User, new ModelId('some id'));
     fail('Should have thrown');
   } catch (err) {
     expect(err).toBeInstanceOf(Error);

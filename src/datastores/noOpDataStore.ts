@@ -1,5 +1,6 @@
-import { DataStore, Query, SearchResult } from '../Datastore';
+import { DataStore, SearchResult } from '../Datastore';
 import { ModelData, ModelId } from '../Model';
+import Query from '../Query';
 
 export const noOpDataStore: DataStore = {
   create: async (modelName: string, data: ModelData): Promise<ModelId> => {
