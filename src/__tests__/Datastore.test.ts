@@ -15,6 +15,7 @@ class User extends Model {
   @field public firstName: string;
   @field public lastName: string;
   @field public stuff?: { foo: number };
+  @field public friendId?: ModelId;
 
   constructor({ email, firstName, lastName }: { email: string; firstName: string; lastName: string }) {
     super();
@@ -193,7 +194,7 @@ test('search first', async () => {
 
   expect(firstSmith).not.toBeUndefined();
   if (firstSmith) {
-    expect(allSmiths[0].id).toBe(firstSmith.id);
+    expect(allSmiths[0].id).toStrictEqual(firstSmith.id);
   } else {
     fail('Should have been found');
   }
@@ -255,5 +256,29 @@ test('datastore decorator', async () => {
     fail('Should have thrown');
   } catch (err) {
     expect(err).toBeInstanceOf(Error);
+  }
+});
+
+test('non-id ModelId', async () => {
+  const jed = new User({
+    email: 'jed@test.com',
+    firstName: 'Jed',
+    lastName: 'Smith',
+  });
+  const savedJed = await jed.save();
+
+  const paddy = new User({
+    email: 'paddy@test.com',
+    firstName: 'Paddy',
+    lastName: 'Smith',
+  });
+  paddy.friendId = savedJed.id;
+  const savedPaddy = await paddy.save();
+
+  const foundPaddy = await find(User, savedPaddy.id);
+  if (foundPaddy) {
+    expect(foundPaddy.friendId).toStrictEqual(savedJed.id);
+  } else {
+    fail('Did not find paddy');
   }
 });

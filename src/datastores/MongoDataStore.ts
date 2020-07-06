@@ -7,27 +7,55 @@ import Query from '../Query';
 
 const log = createLogger('mongoDataStore');
 
-const mongify = (data: ModelData): ModelData | { _id?: mongodb.ObjectId } => {
-  const id = data.id;
-  if (id === ModelId.Empty) {
-    const dataCopy = { ...data };
-    delete dataCopy.id;
-    return dataCopy;
-  } else {
-    const dataCopy = { ...data, id, _id: new mongodb.ObjectId(id.toString()) };
-    delete dataCopy.id;
-    return dataCopy;
+/**
+ * Translates abstract ModelData into Mongo data. This is all about turning
+ * ModelId instances into mongodb.ObjectId instances. Also:
+ * - ModelId.Empty instances are omitted.
+ * - Top-level ModelId instances named 'id' are renamed to _id.
+ */
+const mongify = (val: unknown, topLevel = true): unknown => {
+  if (val instanceof Array) {
+    return (val as unknown[]).map(v => mongify(v, false));
+  } else if (val && typeof val === 'object') {
+    if (val instanceof ModelId) {
+      return new mongodb.ObjectId(val.toString());
+    } else {
+      const valObj = val as { [index: string]: unknown };
+      const obj: { [index: string]: unknown } = {};
+      Object.keys(valObj).forEach((k: string) => {
+        const v = valObj[k];
+        // Omit ModelId.Empty instances.
+        if (v !== ModelId.Empty) {
+          obj[k === 'id' && topLevel ? '_id' : k] = mongify(v, false);
+        }
+      });
+      return obj;
+    }
   }
+  return val;
 };
 
-const deMongify = (doc: ModelData | undefined): ModelData | undefined => {
-  if (doc && doc._id) {
-    const id = new ModelId((doc._id as mongodb.ObjectId).toString());
-    const docCopy = { ...doc, _id: undefined, id };
-    delete docCopy._id;
-    return docCopy as ModelData;
+/**
+ * Translates Mongo data into abstract ModelData. This is the inverse
+ * of the mongify operation.
+ */
+const deMongify = (val: unknown, topLevel = true): unknown => {
+  if (val instanceof Array) {
+    return (val as unknown[]).map(v => deMongify(v, false));
+  } else if (val && typeof val === 'object') {
+    if (val instanceof mongodb.ObjectId) {
+      return new ModelId(val.toString());
+    } else {
+      const valObj = val as { [index: string]: unknown };
+      const obj: { [index: string]: unknown } = {};
+      Object.keys(valObj).forEach((k: string) => {
+        const v = valObj[k];
+        obj[k === '_id' && topLevel ? 'id' : k] = deMongify(v, false);
+      });
+      return obj;
+    }
   }
-  return doc;
+  return val;
 };
 
 export class MongoDataStore implements DataStore {
@@ -46,7 +74,7 @@ export class MongoDataStore implements DataStore {
   public async update(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
     const id = data.id;
-    if (id) {
+    if (id instanceof ModelId) {
       await col.updateOne({ _id: new mongodb.ObjectId(id.toString()) }, { $set: mongify(data) });
       return id;
     }
@@ -58,7 +86,7 @@ export class MongoDataStore implements DataStore {
     try {
       return deMongify(
         (await col.findOne({ _id: new mongodb.ObjectId(id.toString()) }, toMongoFindOptions(options))) || undefined,
-      );
+      ) as ModelData;
     } catch (err) {
       log('Error finding document', err);
       return undefined;
@@ -81,7 +109,7 @@ export class MongoDataStore implements DataStore {
         for await (const doc of cursor) {
           const data = deMongify(doc);
           if (data) {
-            yield data;
+            yield data as ModelData;
           }
         }
       })(),

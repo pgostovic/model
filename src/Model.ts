@@ -11,23 +11,25 @@ const log = createLogger('Model');
 export class ModelId {
   public static readonly Empty = new ModelId('');
 
-  private id: string;
+  private _modelId_: string;
 
   public constructor(id: string | number) {
-    this.id = String(id);
+    this._modelId_ = String(id);
+    if (id === '') {
+      return ModelId.Empty;
+    }
   }
 
   public toString(): string {
-    return this.id;
+    return this._modelId_;
   }
 
   public equals(id: ModelId): boolean {
-    return this.id === id.toString();
+    return this._modelId_ === id.toString();
   }
 }
 
 export interface ModelData {
-  id: ModelId;
   [key: string]: unknown;
 }
 
@@ -93,12 +95,13 @@ export class Model {
   public async save(): Promise<this> {
     const saveOp = this.persisted ? updateData : createData;
     const js = this.toJS();
+
     const id = await saveOp(
       this.getClass(),
       Object.keys(js).reduce((data, k) => (k === '_isPersisted_' ? data : { ...data, [k]: js[k] }), { id: this.id }),
     );
     const model = new Model();
-    Object.assign(model, cloneDeep({ ...this.getData(), id }));
+    Object.assign(model, { ...cloneDeep(this.getData()), id });
     Object.setPrototypeOf(model, this.constructor.prototype);
     model.persisted = model.clone();
     return model as this;
@@ -127,8 +130,7 @@ export class Model {
   public clone(): this {
     const model = new Model();
     const dataClone = cloneDeep(this.getData());
-    if (dataClone.id.toString() === '') {
-      // Make sure the empty id is always ModelId.Empty.
+    if (dataClone.id instanceof ModelId && dataClone.id.equals(ModelId.Empty)) {
       dataClone.id = ModelId.Empty;
     }
     Object.assign(model, dataClone);
@@ -145,7 +147,8 @@ export class Model {
   }
 }
 
-export const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
+export const fromJS = <T extends Model>(rawJs: ModelData, mClass?: typeof Model): T => {
+  const js = unmarshal(rawJs) as ModelData;
   const classes = js._classes_ as string[];
   const cid = classes[classes.length - 1] as string;
   const isPersisted = js._isPersisted_ as boolean;
@@ -230,6 +233,16 @@ const getClasses = (concreteModelClass: typeof Model): Array<typeof Model> => {
   return classes;
 };
 
+/**
+ * Finds serialized Model instances and instantiates them as proper typed Models using fromJS().
+ * If an object has a _classes_ key then it is assumed to be a serialized Model instance.
+ * If fromJS() fails then a warning is logged and the object is passed through.
+ *
+ * NOTE: this function is intended for deserializing data that may contain embedded serialized Model
+ * instances -- i.e. data transmitted over a network.
+ *
+ * @param val some data
+ */
 const parse = (val: unknown): unknown => {
   if (val instanceof Array) {
     return (val as unknown[]).map(parse);
@@ -246,6 +259,27 @@ const parse = (val: unknown): unknown => {
     const obj: { [index: string]: unknown } = {};
     Object.keys(md).forEach((k: string) => {
       obj[k] = parse(md[k]);
+    });
+    return obj;
+  }
+  return val;
+};
+
+/**
+ * Finds serialized ModelId instances and instantiates them as proper ModelId instances.
+ * @param val some data
+ */
+const unmarshal = (val: unknown): unknown => {
+  if (val instanceof Array) {
+    return (val as unknown[]).map(unmarshal);
+  } else if (val && typeof val === 'object') {
+    const valObj = val as { [index: string]: unknown };
+    if (valObj._modelId_ && typeof valObj._modelId_ === 'string') {
+      return new ModelId(valObj._modelId_);
+    }
+    const obj: { [index: string]: unknown } = {};
+    Object.keys(valObj).forEach((k: string) => {
+      obj[k] = unmarshal(valObj[k]);
     });
     return obj;
   }

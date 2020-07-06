@@ -87,6 +87,23 @@ test('serialize/deserialize persisted', async () => {
   expect(userFromJS.persisted).not.toBeUndefined();
 });
 
+test('serialize/deserialize persisted JSON', async () => {
+  const user = new User({
+    email: 'bubba@gump.com',
+    firstName: 'Bubba',
+    lastName: 'Gump',
+  });
+
+  const savedUser = await user.save();
+  const savedUserJSON = JSON.stringify(savedUser, null, 2);
+  const userFromJS = fromJS<User>(JSON.parse(savedUserJSON));
+
+  expect(userFromJS).toBeInstanceOf(User);
+  expect(userFromJS).not.toBe(user);
+  expect(userFromJS).not.toBe(savedUser);
+  expect(userFromJS).toEqual(savedUser);
+});
+
 test('serialize/deserialize JSON', () => {
   const user = new User({
     email: 'bubba@gump.com',

@@ -14,6 +14,7 @@ class Car extends Model {
   @field public stuff?: {
     foo: number;
     bar: number;
+    otherCarId?: ModelId;
   };
 
   constructor({ make, model, colour }: { make: string; model: string; colour: string }) {
@@ -218,6 +219,29 @@ test('Find include/exclude fields', async () => {
     expect(foundCar2.stuff).toEqual({ foo: 1, bar: 10 });
   } else {
     fail('Not found');
+  }
+});
+
+test('non-id ModelId', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  const savedCar1 = await car1.save();
+
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  car2.stuff = { foo: 2, bar: 5, otherCarId: savedCar1.id };
+  const savedCar2 = await car2.save();
+
+  const foundCar2 = await find(Car, savedCar2.id);
+  if (foundCar2 && foundCar2.stuff) {
+    expect(foundCar2.stuff.otherCarId).toStrictEqual(savedCar1.id);
+  } else {
+    fail('No foundCar2.stuff');
+  }
+
+  const foundCars = await search(Car, { 'stuff.otherCarId': savedCar1.id }).all();
+  if (foundCars.length === 1) {
+    expect(foundCars[0].id).toStrictEqual(savedCar2.id);
+  } else {
+    fail('No cars found');
   }
 });
 

@@ -70,8 +70,8 @@ export const logCollections = (): void => {
 
 class MemoryDataStore implements DataStore {
   async save(modelName: string, data: ModelData): Promise<ModelId> {
-    const id = data.id.toString() || dataId.next().value;
-    const records = getCollection(modelName).filter(record => record.id.toString() !== id);
+    const id = (data.id as ModelId).toString() || dataId.next().value;
+    const records = getCollection(modelName).filter(record => (record.id as ModelId).toString() !== id);
     const newRecord = { ...data, id: new ModelId(id) };
     collections.set(modelName, [...records, newRecord]);
     log(`SAVE - ${modelName}(${id})`);
@@ -87,7 +87,7 @@ class MemoryDataStore implements DataStore {
   }
 
   async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
-    const record = getCollection(modelName).find(r => r.id.equals(id));
+    const record = getCollection(modelName).find(r => (r.id as ModelId).equals(id));
     log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);
     return record;
   }
