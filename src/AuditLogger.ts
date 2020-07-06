@@ -1,5 +1,5 @@
 import { PersistObserver, PersistOperation } from './Datastore';
-import { field, Model, ModelData, search } from './Model';
+import { field, Model, ModelData, ModelId, search } from './Model';
 
 enum AuditEventOperation {
   Create = 'create',
@@ -55,7 +55,9 @@ class AuditLogger implements PersistObserver {
           break;
 
         case AuditEventOperation.Update: {
-          const data = col.find(d => d.id.equals(event.data.id));
+          const data = col.find(d => {
+            return (d.id as ModelId).equals(event.data.id as ModelId);
+          });
           if (data) {
             Object.assign(data, event.data);
           } else {
@@ -65,7 +67,7 @@ class AuditLogger implements PersistObserver {
         }
 
         case AuditEventOperation.Delete:
-          obj[event.collectionName] = col.filter(data => !data.id.equals(event.data.id));
+          obj[event.collectionName] = col.filter(data => !(data.id as ModelId).equals(event.data.id as ModelId));
           break;
 
         case AuditEventOperation.Drop:
