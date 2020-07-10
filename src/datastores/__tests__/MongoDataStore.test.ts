@@ -16,6 +16,7 @@ class Car extends Model {
     bar: number;
     otherCarId?: ModelId;
   };
+  @field public date?: Date;
 
   constructor({ make, model, colour }: { make: string; model: string; colour: string }) {
     super();
@@ -242,6 +243,22 @@ test('non-id ModelId', async () => {
     expect(foundCars[0].id).toStrictEqual(savedCar2.id);
   } else {
     fail('No cars found');
+  }
+});
+
+test('dates', async () => {
+  const date = new Date();
+
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  car1.date = date;
+  const savedCar1 = await car1.save();
+
+  const foundCar1 = await find(Car, savedCar1.id);
+  if (foundCar1 && foundCar1.date) {
+    expect(foundCar1.date).toBeInstanceOf(Date);
+    expect(foundCar1.date).toEqual(date);
+  } else {
+    fail('No foundCar1.date');
   }
 });
 

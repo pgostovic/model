@@ -272,6 +272,8 @@ const parse = (val: unknown): unknown => {
 const unmarshal = (val: unknown): unknown => {
   if (val instanceof Array) {
     return (val as unknown[]).map(unmarshal);
+  } else if (val instanceof Date) {
+    return val;
   } else if (val && typeof val === 'object') {
     const valObj = val as { [index: string]: unknown };
     if (valObj._modelId_ && typeof valObj._modelId_ === 'string') {

@@ -16,6 +16,8 @@ const log = createLogger('mongoDataStore');
 const mongify = (val: unknown, topLevel = true): unknown => {
   if (val instanceof Array) {
     return (val as unknown[]).map(v => mongify(v, false));
+  } else if (val instanceof Date) {
+    return val;
   } else if (val && typeof val === 'object') {
     if (val instanceof ModelId) {
       return new mongodb.ObjectId(val.toString());
@@ -42,6 +44,8 @@ const mongify = (val: unknown, topLevel = true): unknown => {
 const deMongify = (val: unknown, topLevel = true): unknown => {
   if (val instanceof Array) {
     return (val as unknown[]).map(v => deMongify(v, false));
+  } else if (val instanceof Date) {
+    return val;
   } else if (val && typeof val === 'object') {
     if (val instanceof mongodb.ObjectId) {
       return new ModelId(val.toString());
