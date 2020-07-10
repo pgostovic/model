@@ -1,5 +1,5 @@
 import { SearchResult } from './Datastore';
-import { fromJS, Model } from './Model';
+import { Model } from './Model';
 
 class Cursor<T extends Model> {
   private modelIterator: () => AsyncIterableIterator<T>;
@@ -15,7 +15,7 @@ class Cursor<T extends Model> {
       }
 
       for await (const data of searchResult.iterator) {
-        const model = fromJS({ ...data, _isPersisted_: true });
+        const model = Model.parse({ ...data, _isPersisted_: true }) as Model;
         if (filter(model)) {
           yield model as T;
           cache.push(model as T);

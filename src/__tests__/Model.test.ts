@@ -1,4 +1,4 @@
-import { field, fromJS, Model, ModelId } from '../Model';
+import { field, Model, ModelId } from '../Model';
 
 class User extends Model {
   @field public email: string;
@@ -107,7 +107,7 @@ test('with date field', () => {
 });
 
 test('fromJS with non-existent class id', () => {
-  expect(() => {
-    fromJS({ id: ModelId.Empty, nothing: 'much' });
-  }).toThrow();
+  // expect(() => {
+  Model.parse({ id: ModelId.Empty, nothing: 'much', _classes_: ['Cheese'] });
+  // }).toThrow();
 });

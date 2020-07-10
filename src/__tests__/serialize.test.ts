@@ -1,6 +1,6 @@
 import { setDefaultDataStore } from '../Datastore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
-import { field, fromJS, Model } from '../index';
+import { field, Model } from '../index';
 
 setDefaultDataStore(memoryDataStore);
 
@@ -57,7 +57,7 @@ test('serialize/deserialize', () => {
   });
 
   const userJS = user.toJS();
-  const userFromJS = fromJS<User>(userJS);
+  const userFromJS = Model.parse<User>(userJS);
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);
@@ -78,7 +78,7 @@ test('serialize/deserialize persisted', async () => {
   const savedUser = await user.save();
 
   const userJS = savedUser.toJS();
-  const userFromJS = fromJS<User>(userJS);
+  const userFromJS = Model.parse<User>(userJS);
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);
@@ -96,7 +96,7 @@ test('serialize/deserialize persisted JSON', async () => {
 
   const savedUser = await user.save();
   const savedUserJSON = JSON.stringify(savedUser, null, 2);
-  const userFromJS = fromJS<User>(JSON.parse(savedUserJSON));
+  const userFromJS = Model.parse<User>(JSON.parse(savedUserJSON));
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);
@@ -126,7 +126,7 @@ test('serialize/deserialize JSON', () => {
   });
 
   const userJSON = JSON.stringify(user);
-  const userFromJS = fromJS<User>(JSON.parse(userJSON));
+  const userFromJS = Model.parse<User>(JSON.parse(userJSON));
 
   expect(userFromJS).toBeInstanceOf(User);
   expect(userFromJS).not.toBe(user);

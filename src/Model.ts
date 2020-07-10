@@ -147,8 +147,7 @@ export class Model {
   }
 }
 
-export const fromJS = <T extends Model>(rawJs: ModelData, mClass?: typeof Model): T => {
-  const js = unmarshal(rawJs) as ModelData;
+const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
   const classes = js._classes_ as string[];
   const cid = classes[classes.length - 1] as string;
   const isPersisted = js._isPersisted_ as boolean;
@@ -246,42 +245,23 @@ const getClasses = (concreteModelClass: typeof Model): Array<typeof Model> => {
 const parse = (val: unknown): unknown => {
   if (val instanceof Array) {
     return (val as unknown[]).map(parse);
-  } else if (val && typeof val === 'object') {
-    const md = val as ModelData;
-    if (md._classes_) {
-      try {
-        return fromJS(md);
-      } catch (err) {
-        const className = [...(md._classes_ as string[])].pop();
-        log.warn(`Unable to unmarshal instance of Model class: ${className}`);
-      }
-    }
-    const obj: { [index: string]: unknown } = {};
-    Object.keys(md).forEach((k: string) => {
-      obj[k] = parse(md[k]);
-    });
-    return obj;
-  }
-  return val;
-};
-
-/**
- * Finds serialized ModelId instances and instantiates them as proper ModelId instances.
- * @param val some data
- */
-const unmarshal = (val: unknown): unknown => {
-  if (val instanceof Array) {
-    return (val as unknown[]).map(unmarshal);
-  } else if (val instanceof Date) {
+  } else if (val instanceof Date || val instanceof ModelId || val instanceof Model) {
     return val;
   } else if (val && typeof val === 'object') {
     const valObj = val as { [index: string]: unknown };
-    if (valObj._modelId_ && typeof valObj._modelId_ === 'string') {
+    if (valObj._classes_) {
+      try {
+        return fromJS(valObj);
+      } catch (err) {
+        const className = [...(valObj._classes_ as string[])].pop();
+        log.warn(`Unable to unmarshal instance of Model class: ${className}`);
+      }
+    } else if (valObj._modelId_ && typeof valObj._modelId_ === 'string') {
       return new ModelId(valObj._modelId_);
     }
     const obj: { [index: string]: unknown } = {};
     Object.keys(valObj).forEach((k: string) => {
-      obj[k] = unmarshal(valObj[k]);
+      obj[k] = parse(valObj[k]);
     });
     return obj;
   }
