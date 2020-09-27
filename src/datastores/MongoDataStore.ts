@@ -171,10 +171,10 @@ const toMongoQuery = (val: unknown): unknown => {
   return val;
 };
 
-const toMongoFindOptions = (options?: Options): FindOneOptions | undefined => {
+const toMongoFindOptions = (options?: Options): FindOneOptions<unknown> | undefined => {
   if (options) {
     const { include = [], exclude = [], sort = [], limit, offset } = options;
-    const mongoOptions: FindOneOptions = {};
+    const mongoOptions: FindOneOptions<unknown> = {};
 
     if (include.length + exclude.length > 0) {
       mongoOptions.projection = {};
@@ -191,6 +191,7 @@ const toMongoFindOptions = (options?: Options): FindOneOptions | undefined => {
           const field = m[2];
           return [field, desc ? -1 : 1];
         }
+        throw new Error(`Invalid sort field syntax: ${s}`);
       });
     }
 

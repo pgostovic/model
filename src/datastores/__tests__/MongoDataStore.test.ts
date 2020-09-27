@@ -17,6 +17,7 @@ class Car extends Model {
     otherCarId?: ModelId;
   };
   @field public date?: Date;
+  @field public someId?: ModelId;
 
   constructor({ make, model, colour }: { make: string; model: string; colour: string }) {
     super();
@@ -259,6 +260,29 @@ test('dates', async () => {
     expect(foundCar1.date).toEqual(date);
   } else {
     fail('No foundCar1.date');
+  }
+});
+
+test('non-id ModelId top level', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  const savedCar1 = await car1.save();
+
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  car2.someId = savedCar1.id;
+  const savedCar2 = await car2.save();
+
+  const foundCar2 = await find(Car, savedCar2.id);
+  if (foundCar2 && foundCar2.someId) {
+    expect(foundCar2.someId).toStrictEqual(savedCar1.id);
+  } else {
+    fail('No foundCar2.someId');
+  }
+
+  const foundCars = await search(Car, { someId: savedCar1.id }).all();
+  if (foundCars.length === 1) {
+    expect(foundCars[0].id).toStrictEqual(savedCar2.id);
+  } else {
+    fail('No cars found');
   }
 });
 
