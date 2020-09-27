@@ -36,6 +36,7 @@ export interface DataStore {
 const dataStoresByModel = new Map<typeof Model, DataStore>();
 
 // Decorator to mark a model's datastore
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const datastore = (ds: DataStore) => (modelClass: any) => {
   if (modelClass === modelClass.baseClass) {
     dataStoresByModel.set(modelClass, ds);
