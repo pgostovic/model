@@ -3,7 +3,7 @@ import { createLogger } from '@phnq/log';
 import cloneDeep from 'lodash.clonedeep';
 
 import Cursor from './Cursor';
-import { createData, dropData, findData, Options, searchData, updateData } from './Datastore';
+import { createData, dropData, findData, Options, searchData, updateData } from './DataStore';
 import { QueryType } from './Query';
 
 const log = createLogger('Model');

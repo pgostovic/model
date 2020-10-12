@@ -1,8 +1,8 @@
 import AuditLogger from '../AuditLogger';
-import { addPersistObserver } from '../Datastore';
+import { addPersistObserver } from '../DataStore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { noOpDataStore } from '../datastores/noOpDataStore';
-import { datastore, field, find, Model, search, setDefaultDataStore } from '../index';
+import { field, find, Model, search, setDefaultDataStore, useDataStore } from '../index';
 import { ModelId } from '../Model';
 
 const auditLogger = new AuditLogger();
@@ -25,7 +25,7 @@ class User extends Model {
   }
 }
 
-@datastore(noOpDataStore)
+@useDataStore(noOpDataStore)
 class UserNoOp extends Model {
   @field public email: string;
   @field public firstName: string;

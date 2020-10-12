@@ -1,7 +1,7 @@
 import { createLogger } from '@phnq/log';
 import mongodb, { Cursor, FilterQuery, FindOneOptions, IndexOptions } from 'mongodb';
 
-import { DataStore, Options, SearchResult } from '../Datastore';
+import { DataStore, Options, SearchResult } from '../DataStore';
 import { ModelData, ModelId } from '../Model';
 import Query from '../Query';
 

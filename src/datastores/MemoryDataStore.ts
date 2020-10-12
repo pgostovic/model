@@ -1,6 +1,6 @@
 import { createLogger } from '@phnq/log';
 
-import { DataStore, SearchResult } from '../Datastore';
+import { DataStore, SearchResult } from '../DataStore';
 import { ModelData, ModelId } from '../Model';
 import Query from '../Query';
 
@@ -114,6 +114,9 @@ class MemoryDataStore implements DataStore {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async close(): Promise<void> {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async createIndex(): Promise<void> {}
 }
 
 export const memoryDataStore = new MemoryDataStore();

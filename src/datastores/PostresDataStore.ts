@@ -1,7 +1,7 @@
 import { createLogger } from '@phnq/log';
 
 // import { Client } from 'pg';
-import { DataStore, Options, SearchResult } from '../Datastore';
+import { DataStore, Options, SearchResult } from '../DataStore';
 import { ModelData, ModelId } from '../Model';
 import Query from '../Query';
 
@@ -54,4 +54,7 @@ export class PostgresDataStore implements DataStore {
   //   }
   //   return this.client;
   // }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async createIndex(): Promise<void> {}
 }

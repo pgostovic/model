@@ -1,9 +1,9 @@
-import { datastore } from '../Datastore';
+import { useDataStore } from '../DataStore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { field, find, Model, ModelId, search } from '../Model';
 // import { qField, qSerialize } from '../Query';
 
-@datastore(memoryDataStore)
+@useDataStore(memoryDataStore)
 abstract class Animal extends Model {
   @field public isAlive = true;
   @field public name: string;

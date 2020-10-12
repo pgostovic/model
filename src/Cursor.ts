@@ -1,4 +1,4 @@
-import { SearchResult } from './Datastore';
+import { SearchResult } from './DataStore';
 import { Model } from './Model';
 
 class Cursor<T extends Model> {

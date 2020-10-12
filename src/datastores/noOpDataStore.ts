@@ -1,4 +1,4 @@
-import { DataStore, SearchResult } from '../Datastore';
+import { DataStore, SearchResult } from '../DataStore';
 import { ModelData, ModelId } from '../Model';
 import Query from '../Query';
 
@@ -25,4 +25,7 @@ export const noOpDataStore: DataStore = {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   close: async () => {},
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async createIndex(): Promise<void> {},
 };

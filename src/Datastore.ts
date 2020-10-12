@@ -31,13 +31,14 @@ export interface DataStore {
   search(modelName: string, query: Query, options?: Options): SearchResult;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
+  createIndex(modelName: string, spec: unknown, options: unknown): Promise<void>;
 }
 
 const dataStoresByModel = new Map<typeof Model, DataStore>();
 
 // Decorator to mark a model's datastore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const datastore = (ds: DataStore) => (modelClass: any) => {
+export const useDataStore = (ds: DataStore) => (modelClass: any) => {
   if (modelClass === modelClass.baseClass) {
     dataStoresByModel.set(modelClass, ds);
   } else {

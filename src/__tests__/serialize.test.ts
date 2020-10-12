@@ -1,4 +1,4 @@
-import { setDefaultDataStore } from '../Datastore';
+import { setDefaultDataStore } from '../DataStore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { field, Model } from '../index';
 
