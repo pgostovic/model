@@ -85,6 +85,18 @@ export class MongoDataStore implements DataStore {
     throw new Error('Must specify id to update a document');
   }
 
+  async delete(modelName: string, arg: ModelId | Query): Promise<boolean> {
+    const col = await this.collection(modelName);
+    if (arg instanceof ModelId) {
+      const id = arg as ModelId;
+      await col.deleteOne({ _id: new mongodb.ObjectId(id.toString()) });
+    } else {
+      const query = arg as Query;
+      await col.deleteMany(toMongoQuery(query) as FilterQuery<unknown>);
+    }
+    return true;
+  }
+
   public async find(modelName: string, id: ModelId, options?: Options): Promise<ModelData | undefined> {
     const col = await this.collection(modelName);
     try {

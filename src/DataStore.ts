@@ -27,6 +27,7 @@ export interface SearchResult {
 export interface DataStore {
   create(modelName: string, data: ModelData): Promise<ModelId>;
   update(modelName: string, data: ModelData): Promise<ModelId>;
+  delete(modelName: string, idOrQuery: ModelId | Query): Promise<boolean>;
   find(modelName: string, id: ModelId, options?: Options): Promise<ModelData | undefined>;
   search(modelName: string, query: Query, options?: Options): SearchResult;
   drop(modelName: string): Promise<boolean>;
@@ -100,6 +101,12 @@ export const findData = (modelClass: typeof Model, id: ModelId, options?: Option
 
 export const searchData = (modelClass: typeof Model, query: QueryType, options?: Options): SearchResult =>
   getDataStore(modelClass).search(modelClass.collectionName, qSerialize(query), options);
+
+export const deleteData = (modelClass: typeof Model, idOrQuery: ModelId | QueryType): Promise<boolean> =>
+  getDataStore(modelClass).delete(
+    modelClass.collectionName,
+    idOrQuery instanceof ModelId ? idOrQuery : qSerialize(idOrQuery),
+  );
 
 export const dropData = async (modelClass: typeof Model): Promise<boolean> => {
   const collectionName = modelClass.collectionName;

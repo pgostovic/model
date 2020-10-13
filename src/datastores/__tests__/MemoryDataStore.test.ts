@@ -115,6 +115,29 @@ test('Search by sub-attribute, dot notation', async () => {
   expect(results.length).toBe(1);
 });
 
+test('delete by id', async () => {
+  const savedCar = await new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' }).save();
+  const id = savedCar.id;
+  expect(await find(Car, id)).toBeInstanceOf(Car);
+  expect(await savedCar.delete()).toBe(true);
+  expect(await find(Car, id)).toBeUndefined();
+});
+
+test('delete by query', async () => {
+  const car1 = await new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' }).save();
+  const car2 = await new Car({ make: 'Volvo', model: 'XC-90', colour: 'Yellow' }).save();
+  const car3 = await new Car({ make: 'Volvo', model: 'XC-70', colour: 'White' }).save();
+
+  const car1Id = car1.id;
+  const car2Id = car2.id;
+  const car3Id = car3.id;
+
+  expect(await Car.delete({ model: 'XC-90' })).toBe(true);
+  expect(await find(Car, car1Id)).toBeUndefined();
+  expect(await find(Car, car2Id)).toBeUndefined();
+  expect(await find(Car, car3Id)).toBeInstanceOf(Car);
+});
+
 afterAll(async () => {
   await memoryDataStore.close();
 });

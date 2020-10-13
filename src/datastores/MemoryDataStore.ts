@@ -86,6 +86,19 @@ class MemoryDataStore implements DataStore {
     return this.save(modelName, data);
   }
 
+  async delete(modelName: string, arg: ModelId | Query): Promise<boolean> {
+    if (arg instanceof ModelId) {
+      const id = arg as ModelId;
+      const records = getCollection(modelName).filter(data => !id.equals(data.id as ModelId));
+      collections.set(modelName, records);
+    } else {
+      const query = arg as Query;
+      const records = getCollection(modelName).filter(record => !match(query, record));
+      collections.set(modelName, records);
+    }
+    return true;
+  }
+
   async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
     const record = getCollection(modelName).find(r => (r.id as ModelId).equals(id));
     log(`FIND - ${modelName}(${id}) ${record ? 'found' : 'not found'}`);

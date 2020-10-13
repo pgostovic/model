@@ -3,7 +3,7 @@ import { createLogger } from '@phnq/log';
 import cloneDeep from 'lodash.clonedeep';
 
 import Cursor from './Cursor';
-import { createData, dropData, findData, Options, searchData, updateData } from './DataStore';
+import { createData, deleteData, dropData, findData, Options, searchData, updateData } from './DataStore';
 import { QueryType } from './Query';
 
 const log = createLogger('Model');
@@ -75,6 +75,10 @@ export class Model {
     registeredClasses.set(this.cid, this);
   }
 
+  public static delete(query: QueryType): Promise<boolean> {
+    return deleteData(this, query);
+  }
+
   public static drop(): Promise<boolean> {
     return dropData(this);
   }
@@ -105,6 +109,10 @@ export class Model {
     Object.setPrototypeOf(model, this.constructor.prototype);
     model.persisted = model.clone();
     return model as this;
+  }
+
+  public async delete(): Promise<boolean> {
+    return await deleteData(this.getClass(), this.id);
   }
 
   private getData(): ModelData {

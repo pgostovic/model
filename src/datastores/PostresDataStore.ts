@@ -26,6 +26,11 @@ export class PostgresDataStore implements DataStore {
     throw new Error('Not yet');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async delete(_modelName: string, _arg: ModelId | Query): Promise<boolean> {
+    throw new Error('Not yet');
+  }
+
   public async find(modelName: string, id: ModelId): Promise<ModelData | undefined> {
     log('find', modelName, id);
     throw new Error('Not yet');
