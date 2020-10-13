@@ -309,6 +309,21 @@ test('delete by query', async () => {
   expect(await find(Car, car3Id)).toBeInstanceOf(Car);
 });
 
+test('delete all', async () => {
+  const car1 = await new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' }).save();
+  const car2 = await new Car({ make: 'Volvo', model: 'XC-90', colour: 'Yellow' }).save();
+  const car3 = await new Car({ make: 'Volvo', model: 'XC-70', colour: 'White' }).save();
+
+  const car1Id = car1.id;
+  const car2Id = car2.id;
+  const car3Id = car3.id;
+
+  expect(await Car.delete({})).toBe(true);
+  expect(await find(Car, car1Id)).toBeUndefined();
+  expect(await find(Car, car2Id)).toBeUndefined();
+  expect(await find(Car, car3Id)).toBeUndefined();
+});
+
 afterAll(async () => {
   await mongoDataStore.close();
 });
