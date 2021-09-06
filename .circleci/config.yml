@@ -34,4 +34,4 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
 
       # run tests!
-      - run: NO_DOCKER_MONGO=1 npm run test:coverage
+      - run: STD_MONGO_PORT=1 npm run test:coverage
