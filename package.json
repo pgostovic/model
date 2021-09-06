@@ -9,8 +9,8 @@
     "clean": "rimraf dist",
     "test:coverage": "jest --clearCache; npm t -- --coverage",
     "test": "jest",
-    "pretest": "if [ \"$NO_DOCKER_MONGO\" != \"1\" ]; then docker run -d --name mongo_phnq_model_test -p 27018:27017 mongo; fi",
-    "posttest": "if [ \"$NO_DOCKER_MONGO\" != \"1\" ]; then docker stop mongo_phnq_model_test; docker rm mongo_phnq_model_test; fi",
+    "pretest": "if [ \"$STD_MONGO_PORT\" != \"1\" ]; then docker run -d --name mongo_phnq_model_test -p 27018:27017 mongo; fi",
+    "posttest": "if [ \"$STD_MONGO_PORT\" != \"1\" ]; then docker stop mongo_phnq_model_test; docker rm mongo_phnq_model_test; fi",
     "release:patch": "npm run clean; npm version patch; npm run dist; cd dist; npm publish",
     "release:minor": "npm run clean; npm version minor; npm run dist; cd dist; npm publish"
   },
