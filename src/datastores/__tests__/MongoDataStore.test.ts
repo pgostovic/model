@@ -3,7 +3,9 @@ import { ModelId } from '../../Model';
 import { qField } from '../../Query';
 import { MongoDataStore } from '../MongoDataStore';
 
-const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || 'mongodb://localhost:27017/modeltest');
+const MONGO_PORT = process.env['NO_DOCKER_MONGO'] === '1' ? 27017 : 27018;
+
+const mongoDataStore = new MongoDataStore(process.env.MONGODB_URI || `mongodb://localhost:${MONGO_PORT}/modeltest`);
 
 setDefaultDataStore(mongoDataStore);
 
