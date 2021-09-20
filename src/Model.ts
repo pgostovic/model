@@ -115,18 +115,6 @@ export class Model {
     return await deleteData(this.getClass(), this.id);
   }
 
-  private getData(): ModelData {
-    const fieldNames = getFieldNames(this.getClass());
-    const data: ModelData = { id: this.id };
-    fieldNames.forEach((key: string) => {
-      const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
-      if (value !== undefined) {
-        data[key] = value;
-      }
-    });
-    return data;
-  }
-
   public toJS(): ModelData {
     return Object.freeze({
       ...this.clone().getData(),
@@ -153,6 +141,31 @@ export class Model {
   public getClass(): typeof Model {
     return Object.getPrototypeOf(this).constructor;
   }
+
+  /**
+   * This method is used during deserialization to fill the instance with data. It is
+   * called automatically when retrieving data from a database, and also indirectly via
+   * `Model.parse()`. In both cases, the data is prepared in an instance-oriented way
+   * before being passed in. As such, calling this method directly is not advised. However,
+   * overriding it in a concrete subclass may be useful as a hydration event or filter. In
+   * that case, calling `super.hydrate(data)` is recommended.
+   * @param data the instance-oriented data to be applied.
+   */
+  public hydrate(data: ModelData): void {
+    Object.assign(this, data);
+  }
+
+  private getData(): ModelData {
+    const fieldNames = getFieldNames(this.getClass());
+    const data: ModelData = { id: this.id };
+    fieldNames.forEach((key: string) => {
+      const value = (Object.getOwnPropertyDescriptor(this, key) || {}).value;
+      if (value !== undefined) {
+        data[key] = value;
+      }
+    });
+    return data;
+  }
 }
 
 const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
@@ -168,8 +181,8 @@ const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
     });
 
     const model = new Model();
-    Object.assign(model, data);
     Object.setPrototypeOf(model, modelClass.prototype);
+    model.hydrate(data);
     if (isPersisted) {
       model.persisted = model.clone();
     }
