@@ -4,7 +4,7 @@ import { field, Model } from '../index';
 
 setDefaultDataStore(memoryDataStore);
 
-const idIterator = (function*(): IterableIterator<number> {
+const idIterator = (function* (): IterableIterator<number> {
   let i = 0;
   while (true) {
     yield ++i;

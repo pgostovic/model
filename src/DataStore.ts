@@ -1,18 +1,18 @@
 import { createLogger } from '@phnq/log';
 
 import { noOpDataStore } from './datastores/noOpDataStore';
-import { Model, ModelData, ModelId } from './Model';
+import { Field, Model, ModelData, ModelId } from './Model';
 import Query, { qSerialize, QueryType } from './Query';
 
 const log = createLogger('DataStore');
 
-export interface Options {
+export interface Options<T extends Model = Model> {
   /** Fields to include in results -- include all by default */
-  include?: string[];
+  include?: Field<T>[];
   /** Fields to exclude in results -- exclude none by default */
-  exclude?: string[];
-  /** Sort criteria -- list of fields (minus prefix for descending) */
-  sort?: string[];
+  exclude?: Field<T>[];
+  /** Sort criteria */
+  sort?: Field<T>[] | Partial<Record<Field<T>, 1 | -1>>;
   /** Max number of results to return */
   limit?: number;
   /** Pagination offset */
@@ -24,12 +24,12 @@ export interface SearchResult {
   iterator: AsyncIterableIterator<ModelData>;
 }
 
-export interface DataStore {
+export interface DataStore<T extends Model = Model> {
   create(modelName: string, data: ModelData): Promise<ModelId>;
   update(modelName: string, data: ModelData): Promise<ModelId>;
   delete(modelName: string, idOrQuery: ModelId | Query): Promise<boolean>;
-  find(modelName: string, id: ModelId, options?: Options): Promise<ModelData | undefined>;
-  search(modelName: string, query: Query, options?: Options): SearchResult;
+  find(modelName: string, id: ModelId, options?: Options<T>): Promise<ModelData | undefined>;
+  search(modelName: string, query: Query, options?: Options<T>): SearchResult;
   drop(modelName: string): Promise<boolean>;
   close(): Promise<void>;
   createIndex(modelName: string, spec: unknown, options: unknown): Promise<void>;
@@ -96,10 +96,13 @@ export const updateData = async (modelClass: typeof Model, data: ModelData): Pro
   return id;
 };
 
-export const findData = (modelClass: typeof Model, id: ModelId, options?: Options): Promise<ModelData | undefined> =>
-  getDataStore(modelClass).find(modelClass.collectionName, id, options);
+export const findData = (
+  modelClass: typeof Model,
+  id: ModelId,
+  options?: Options<Model>,
+): Promise<ModelData | undefined> => getDataStore(modelClass).find(modelClass.collectionName, id, options);
 
-export const searchData = (modelClass: typeof Model, query: QueryType, options?: Options): SearchResult =>
+export const searchData = (modelClass: typeof Model, query: QueryType, options?: Options<Model>): SearchResult =>
   getDataStore(modelClass).search(modelClass.collectionName, qSerialize(query), options);
 
 export const deleteData = (modelClass: typeof Model, idOrQuery: ModelId | QueryType): Promise<boolean> =>

@@ -9,8 +9,10 @@ setDefaultDataStore(memoryDataStore);
 const auditLogger = new AuditLogger();
 addPersistObserver(auditLogger);
 
+type Field<T extends string | number> = T;
+
 class Car extends Model {
-  @field public make: string;
+  @field public make: Field<string>;
   @field public model: string;
   @field public colour: string;
   @field public stuff?: {

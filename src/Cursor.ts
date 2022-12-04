@@ -9,7 +9,7 @@ class Cursor<T extends Model> {
   public constructor(searchResult: SearchResult, filter: (m: Model) => boolean = () => true) {
     const cache = this.cache;
     this.count = searchResult.count;
-    this.modelIterator = async function*() {
+    this.modelIterator = async function* () {
       for (const cached of cache) {
         yield cached;
       }

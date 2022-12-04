@@ -160,6 +160,21 @@ test('Search with query builder', async () => {
   expect((await nonVolvos.all())[0].id).toEqual(savedCar3.id);
 });
 
+test('Search sort by attribute', async () => {
+  const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
+  const car2 = new Car({ make: 'Volvo', model: 'XC-70', colour: 'Black' });
+  const car3 = new Car({ make: 'Volvo', model: 'XC-50', colour: 'Red' });
+  await car1.save();
+  await car2.save();
+  await car3.save();
+
+  const volvos = search(Car, { make: 'Volvo' }, { sort: ['colour'] });
+  expect((await volvos.all()).map(({ colour }) => colour)).toEqual(['Black', 'Red', 'Willow']);
+
+  const volvosDesc = search(Car, { make: 'Volvo' }, { sort: { colour: -1 } });
+  expect((await volvosDesc.all()).map(({ colour }) => colour)).toEqual(['Willow', 'Red', 'Black']);
+});
+
 test('Search sort by sub attribute', async () => {
   const car1 = new Car({ make: 'Volvo', model: 'XC-90', colour: 'Willow' });
   car1.stuff = { foo: 1, bar: 10 };
@@ -174,8 +189,8 @@ test('Search sort by sub attribute', async () => {
   const volvos = search(Car, { make: 'Volvo' }, { sort: ['stuff.bar'] });
   expect((await volvos.all()).map(({ model }) => model)).toEqual(['XC-70', 'XC-50', 'XC-90']);
 
-  const volvosDesc = search(Car, { make: 'Volvo' }, { sort: ['-stuff.foo'] });
-  expect((await volvosDesc.all()).map(({ model }) => model)).toEqual(['XC-50', 'XC-70', 'XC-90']);
+  const volvosDesc = search(Car, { make: 'Volvo' }, { sort: { ['stuff.bar']: -1 } });
+  expect((await volvosDesc.all()).map(({ model }) => model)).toEqual(['XC-90', 'XC-50', 'XC-70']);
 });
 
 test('Search include/exclude fields', async () => {

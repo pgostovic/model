@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import { createLogger } from '@phnq/log';
+import { Path } from 'extended-utility-types';
 import cloneDeep from 'lodash.clonedeep';
 
 import Cursor from './Cursor';
@@ -34,7 +34,7 @@ export interface ModelData {
 }
 
 const registeredClasses = new Map<string, typeof Model>();
-const fieldNamesByModel = new Map<Function, string[]>();
+const fieldNamesByModel = new Map<unknown, string[]>();
 
 export const field = (model: Model, key: string): void => {
   const modelCls = model.constructor;
@@ -42,6 +42,8 @@ export const field = (model: Model, key: string): void => {
   fieldNames.push(key);
   fieldNamesByModel.set(modelCls, fieldNames);
 };
+
+export type Field<T extends Model> = Path<Required<Omit<T, keyof Model>>>;
 
 export class Model {
   public static get classes(): Array<typeof Model> {
@@ -194,13 +196,13 @@ const fromJS = <T extends Model>(js: ModelData, mClass?: typeof Model): T => {
 export const find = async <T extends Model>(
   c: { new (...args: never[]): T },
   id: ModelId,
-  options?: Options,
+  options?: Options<T>,
 ): Promise<T | undefined> => {
   if (options && options.include) {
-    options.include = [...options.include, '_classes_', '_isPersisted_'];
+    options.include = [...options.include, '_classes_', '_isPersisted_'] as Field<T>[];
   }
 
-  const data = await findData((c as unknown) as typeof Model, id, options);
+  const data = await findData(c as unknown as typeof Model, id, options as Options<Model>);
   if (data) {
     const result = fromJS({ ...data, _isPersisted_: true });
     if (result instanceof c) {
@@ -213,16 +215,18 @@ export const find = async <T extends Model>(
 export const search = <T extends Model>(
   c: { new (...args: never[]): T },
   query: QueryType,
-  options?: Options,
+  options?: Options<T>,
 ): Cursor<T> => {
-  const modelClass = (c as unknown) as typeof Model;
+  const modelClass = c as unknown as typeof Model;
 
   if (options && options.include) {
-    options.include = [...options.include, '_classes_', '_isPersisted_'];
+    options.include = [...options.include, '_classes_', '_isPersisted_'] as Field<T>[];
   }
 
   // TODO: Need to add class names to the query.
-  return new Cursor<T>(searchData(modelClass, query, options), m => m.getClass().classNames.includes(modelClass.name));
+  return new Cursor<T>(searchData(modelClass, query, options as Options<Model>), m =>
+    m.getClass().classNames.includes(modelClass.name),
+  );
 };
 
 export const all = async <T>(cursor: AsyncIterableIterator<T>): Promise<T[]> => {

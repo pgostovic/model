@@ -1,5 +1,15 @@
 import { createLogger } from '@phnq/log';
-import mongodb, { Cursor, FilterQuery, FindOneOptions, IndexOptions } from 'mongodb';
+import {
+  Collection,
+  CreateIndexesOptions,
+  Document,
+  Filter,
+  FindOptions,
+  IndexSpecification,
+  MongoClient,
+  ObjectId,
+  Sort,
+} from 'mongodb';
 
 import { DataStore, Options, SearchResult } from '../DataStore';
 import { ModelData, ModelId } from '../Model';
@@ -9,18 +19,18 @@ const log = createLogger('mongoDataStore');
 
 /**
  * Translates abstract ModelData into Mongo data. This is all about turning
- * ModelId instances into mongodb.ObjectId instances. Also:
+ * ModelId instances into ObjectId instances. Also:
  * - ModelId.Empty instances are omitted.
  * - Top-level ModelId instances named 'id' are renamed to _id.
  */
-const mongify = (val: unknown, topLevel = true): unknown => {
+const mongify = <T>(val: T, topLevel = true): Document | T => {
   if (val instanceof Array) {
-    return (val as unknown[]).map(v => mongify(v, false));
+    return val.map(v => mongify(v, false));
   } else if (val instanceof Date) {
     return val;
   } else if (val && typeof val === 'object') {
     if (val instanceof ModelId) {
-      return new mongodb.ObjectId(val.toString());
+      return new ObjectId(val.toString());
     } else {
       const valObj = val as { [index: string]: unknown };
       const obj: { [index: string]: unknown } = {};
@@ -47,7 +57,7 @@ const deMongify = (val: unknown, topLevel = true): unknown => {
   } else if (val instanceof Date) {
     return val;
   } else if (val && typeof val === 'object') {
-    if (val instanceof mongodb.ObjectId) {
+    if (val instanceof ObjectId) {
       return new ModelId(val.toString());
     } else {
       const valObj = val as { [index: string]: unknown };
@@ -64,7 +74,7 @@ const deMongify = (val: unknown, topLevel = true): unknown => {
 
 export class MongoDataStore implements DataStore {
   private connUrl: string;
-  private client?: mongodb.MongoClient;
+  private client?: MongoClient;
 
   constructor(connUrl: string) {
     this.connUrl = connUrl;
@@ -72,14 +82,14 @@ export class MongoDataStore implements DataStore {
 
   public async create(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
-    return new ModelId((await col.insertOne(mongify(data))).insertedId);
+    return new ModelId((await col.insertOne(mongify(data))).insertedId.toString());
   }
 
   public async update(modelName: string, data: ModelData): Promise<ModelId> {
     const col = await this.collection(modelName);
     const id = data.id;
     if (id instanceof ModelId) {
-      await col.updateOne({ _id: new mongodb.ObjectId(id.toString()) }, { $set: mongify(data) });
+      await col.updateOne({ _id: new ObjectId(id.toString()) }, { $set: mongify(data) });
       return id;
     }
     throw new Error('Must specify id to update a document');
@@ -89,10 +99,10 @@ export class MongoDataStore implements DataStore {
     const col = await this.collection(modelName);
     if (arg instanceof ModelId) {
       const id = arg as ModelId;
-      await col.deleteOne({ _id: new mongodb.ObjectId(id.toString()) });
+      await col.deleteOne({ _id: new ObjectId(id.toString()) });
     } else {
       const query = arg as Query;
-      await col.deleteMany(toMongoQuery(query) as FilterQuery<unknown>);
+      await col.deleteMany(toMongoQuery(query) as Filter<unknown>);
     }
     return true;
   }
@@ -101,7 +111,7 @@ export class MongoDataStore implements DataStore {
     const col = await this.collection(modelName);
     try {
       return deMongify(
-        (await col.findOne({ _id: new mongodb.ObjectId(id.toString()) }, toMongoFindOptions(options))) || undefined,
+        (await col.findOne({ _id: new ObjectId(id.toString()) }, toMongoFindOptions(options))) || undefined,
       ) as ModelData;
     } catch (err) {
       log('Error finding document', err);
@@ -110,18 +120,27 @@ export class MongoDataStore implements DataStore {
   }
 
   public search(modelName: string, query: Query, options?: Options): SearchResult {
-    const cursorPromise = (async (): Promise<Cursor> => {
-      const col = await this.collection(modelName);
-      return col.find(toMongoQuery(query) as FilterQuery<unknown>, toMongoFindOptions(options));
-    })();
+    const colPromise = this.collection(modelName);
+    const mongoQuery = toMongoQuery(query) as Filter<unknown>;
+    const mongoOptions = toMongoFindOptions(options);
 
     return {
-      count: new Promise<number>(async resolve => {
-        const cursor = await cursorPromise;
-        resolve(await cursor.count());
-      }),
-      iterator: (async function*() {
-        const cursor = await cursorPromise;
+      count: colPromise.then(col => col.countDocuments(mongoQuery)),
+      iterator: (async function* () {
+        let cursor = (await colPromise).find(mongoQuery, mongoOptions);
+
+        if (options?.sort) {
+          cursor = cursor.sort(options.sort as Sort);
+        }
+
+        if (options?.limit) {
+          cursor = cursor.limit(options.limit);
+        }
+
+        if (options?.offset) {
+          cursor = cursor.skip(options.offset);
+        }
+
         for await (const doc of cursor) {
           const data = deMongify(doc);
           if (data) {
@@ -149,19 +168,16 @@ export class MongoDataStore implements DataStore {
 
   public async createIndex(modelName: string, spec: unknown, options: unknown): Promise<void> {
     const col = await this.collection(modelName);
-    await col.createIndex(spec, options as IndexOptions);
+    await col.createIndex(spec as IndexSpecification, options as CreateIndexesOptions);
   }
 
-  private async collection(name: string): Promise<mongodb.Collection> {
+  private async collection(name: string): Promise<Collection> {
     return (await this.getClient()).db().collection(name);
   }
 
-  private async getClient(): Promise<mongodb.MongoClient> {
+  private async getClient(): Promise<MongoClient> {
     if (!this.client) {
-      this.client = await mongodb.MongoClient.connect(this.connUrl, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      this.client = new MongoClient(this.connUrl);
     }
     return this.client;
   }
@@ -169,7 +185,7 @@ export class MongoDataStore implements DataStore {
 
 const toMongoQuery = (val: unknown): unknown => {
   if (val instanceof ModelId) {
-    return new mongodb.ObjectId(val.toString());
+    return new ObjectId(val.toString());
   } else if (val instanceof Array) {
     return (val as unknown[]).map(toMongoQuery);
   } else if (val && typeof val === 'object') {
@@ -183,36 +199,16 @@ const toMongoQuery = (val: unknown): unknown => {
   return val;
 };
 
-const toMongoFindOptions = (options?: Options): FindOneOptions<unknown> | undefined => {
+const toMongoFindOptions = (options?: Options): FindOptions | undefined => {
   if (options) {
-    const { include = [], exclude = [], sort = [], limit, offset } = options;
-    const mongoOptions: FindOneOptions<unknown> = {};
+    const { include = [], exclude = [] } = options;
+    const mongoOptions: FindOptions = {};
 
     if (include.length + exclude.length > 0) {
       mongoOptions.projection = {};
       [...include, ...exclude].forEach(f => {
         mongoOptions.projection = { ...mongoOptions.projection, [f]: include.includes(f) ? 1 : 0 };
       });
-    }
-
-    if (sort.length > 0) {
-      mongoOptions.sort = sort.map(s => {
-        const m = s.match(/([+-]?)(.*)/);
-        if (m) {
-          const desc = m[1] === '-';
-          const field = m[2];
-          return [field, desc ? -1 : 1];
-        }
-        throw new Error(`Invalid sort field syntax: ${s}`);
-      });
-    }
-
-    if (limit !== undefined) {
-      mongoOptions.limit = limit;
-    }
-
-    if (offset !== undefined) {
-      mongoOptions.skip = offset;
     }
 
     return mongoOptions;

@@ -41,9 +41,13 @@ const deepMatch = (query: unknown, data: unknown, matchAll: boolean): boolean =>
     }
   } else if (typeof query === 'object' && typeof data === 'object') {
     if (matchAll) {
-      return !Object.keys(query as {}).find(k => !deepMatch((query as any)[k], (data as any)[k], matchAll));
+      return !Object.keys(query as Record<string, unknown>).find(
+        k => !deepMatch((query as any)[k], (data as any)[k], matchAll),
+      );
     } else {
-      return !!Object.keys(query as {}).find(k => deepMatch((query as any)[k], (data as any)[k], matchAll));
+      return !!Object.keys(query as Record<string, unknown>).find(k =>
+        deepMatch((query as any)[k], (data as any)[k], matchAll),
+      );
     }
   }
   return query === data;
@@ -111,7 +115,7 @@ class MemoryDataStore implements DataStore {
       count: new Promise<number>(resolve => {
         resolve(records.length);
       }),
-      iterator: (async function*() {
+      iterator: (async function* () {
         log(`SEARCH - ${modelName}(${JSON.stringify(query)}) ${records.length} records`);
         for (const record of records) {
           yield record;
