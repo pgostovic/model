@@ -1,13 +1,8 @@
-import AuditLogger from '../../AuditLogger';
-import { addPersistObserver } from '../../DataStore';
 import { field, find, Model, search, setDefaultDataStore } from '../../index';
 import { ModelId } from '../../Model';
 import { memoryDataStore } from '../MemoryDataStore';
 
 setDefaultDataStore(memoryDataStore);
-
-const auditLogger = new AuditLogger();
-addPersistObserver(auditLogger);
 
 type Field<T extends string | number> = T;
 
@@ -27,14 +22,6 @@ class Car extends Model {
     this.colour = colour;
   }
 }
-
-afterAll(async () => {
-  // logCollections();
-
-  // console.log('RECONSTRUCT', await auditLogger.reconstruct());
-
-  await auditLogger.reconstruct();
-});
 
 beforeEach(async () => {
   await Car.drop();

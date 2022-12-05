@@ -1,12 +1,7 @@
-import AuditLogger from '../AuditLogger';
-import { addPersistObserver } from '../DataStore';
 import { memoryDataStore } from '../datastores/MemoryDataStore';
 import { noOpDataStore } from '../datastores/noOpDataStore';
 import { field, find, Model, search, setDefaultDataStore, useDataStore } from '../index';
 import { ModelId } from '../Model';
-
-const auditLogger = new AuditLogger();
-addPersistObserver(auditLogger);
 
 setDefaultDataStore(memoryDataStore);
 
@@ -39,10 +34,6 @@ class UserNoOp extends Model {
     this.lastName = lastName;
   }
 }
-
-afterAll(() => {
-  auditLogger.reconstruct();
-});
 
 beforeEach(async () => {
   await User.drop();
